@@ -1,7 +1,7 @@
 # Helios Server
 
-### Requirements
-* [NodeJS](https://nodejs.org/en/download/)
+### Dependencies
+* NodeJS 10.15.1
 
 ### Run
 ```
