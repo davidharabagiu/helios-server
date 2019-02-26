@@ -5,10 +5,12 @@
 
 ### Setup
 ```
+cd helios-server
 npm install
 ```
 
 ### Run
 ```
+cd helios-server
 node server.js
 ```
