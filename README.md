@@ -5,12 +5,16 @@
 
 ### Setup
 ```
-cd helios-server
 npm install
 ```
 
 ### Run
 ```
-cd helios-server
 node server.js
+```
+
+### Run with nodemon
+```
+npm install nodemon -g
+nodemon
 ```
