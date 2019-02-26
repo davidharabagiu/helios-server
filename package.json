@@ -1,0 +1,20 @@
+{
+  "name": "helios-server",
+  "version": "1.0.0",
+  "description": "Helios Server",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davidharabagiu/helios-server.git"
+  },
+  "author": "David Harabagiu",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/davidharabagiu/helios-server/issues"
+  },
+  "homepage": "https://github.com/davidharabagiu/helios-server#readme"
+}
