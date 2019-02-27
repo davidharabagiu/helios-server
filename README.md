@@ -12,6 +12,10 @@
 * `sudo chown <current_user> /data`
 * `npm install`
 
+### Optional
+* nodemon: `npm install nodemon -g`
+* JSDoc: `npm install jsdoc -g`
+
 ### Run
 ```
 mongod
@@ -20,12 +24,10 @@ node server.js
 
 ### Run with nodemon
 ```
-npm install nodemon -g
 nodemon
 ```
 
 ### Generate JSDoc documentation
 ```
-npm install jsdoc -g
 jsdoc . -c jsdoc_config.json
 ```
