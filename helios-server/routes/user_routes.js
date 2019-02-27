@@ -1,15 +1,13 @@
-module.exports = {
-    register: register,
-    login: login,
-    logout: logout
-}
+/**
+ * @module routes/user_routes
+ */
 
 /**
  * Create a user account.
  * @param {*} request - HTTP request
  * @param {*} response - HTTP response
  */
-function register(request, response) {
+exports.register = function(request, response) {
 
 }
 
@@ -18,7 +16,7 @@ function register(request, response) {
  * @param {*} request - HTTP request
  * @param {*} response - HTTP response
  */
-function login(request, response) {
+exports.login = function(request, response) {
 
 }
 
@@ -27,6 +25,6 @@ function login(request, response) {
  * @param {*} request - HTTP request
  * @param {*} response - HTTP response
  */
-function logout(request, response) {
+exports.logout = function(request, response) {
 
 }

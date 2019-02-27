@@ -1,8 +1,8 @@
-var mongodb = require('mongodb');
+/**
+ * @module persistence/db_access
+ */
 
-module.exports = {
-    connect: connect
-};
+var mongodb = require('mongodb');
 
 var MongoClient = mongodb.MongoClient;
 var url = 'mongodb://localhost:27017/';
@@ -11,7 +11,7 @@ var url = 'mongodb://localhost:27017/';
  * Creates a connection to the database.
  * @param {function} callback - callback with a connection parameter
  */
-function connect(callback) {
+exports.connect = function(callback) {
     MongoClient.connect(url, function(err, db) {
         if (err) {
             throw err;

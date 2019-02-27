@@ -23,3 +23,9 @@ node server.js
 npm install nodemon -g
 nodemon
 ```
+
+### Generate JSDoc documentation
+```
+npm install jsdoc -g
+jsdoc . -c jsdoc_config.json
+```
