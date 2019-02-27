@@ -1,17 +1,20 @@
 # Helios Server
 
 ### Dependencies
-* NodeJS 10.15.1
-* Express 4.6.14
-* MongoDB 3.1.13
+* Node.js 10.15.1
+* MongoDB 4.0.6
+* Express 4.6.14 Node Module
+* MongoDB 3.1.13 Node Module
 
 ### Setup
-```
-npm install
-```
+* Add `<path_to_mongodb>/bin` to PATH
+* `sudo mkdir -p /data/db`
+* `sudo chown <current_user> /data`
+* `npm install`
 
 ### Run
 ```
+mongod
 node server.js
 ```
 
