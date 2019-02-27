@@ -8,7 +8,7 @@ var MongoClient = mongodb.MongoClient;
 var url = 'mongodb://localhost:27017/';
 
 /**
- * @brief Creates a connection to the database.
+ * Creates a connection to the database.
  * @param {function} callback - callback with a connection parameter
  */
 function connect(callback) {
