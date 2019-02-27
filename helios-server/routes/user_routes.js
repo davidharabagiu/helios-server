@@ -1,3 +1,9 @@
+module.exports = {
+    register: register,
+    login: login,
+    logout: logout
+}
+
 function register(request, response) {
 
 }
