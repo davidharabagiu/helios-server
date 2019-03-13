@@ -1,15 +1,16 @@
 var persistence = require('../persistence/user_persistence');
 var tokens = require('../utils/tokens');
 
-var UserServiceErrors = {
-    DATABASE_ERROR = 0,
-    REGISTER_USER_ALREADY_EXISTS = 1,
-    LOGIN_INVALID_USERNAME = 2,
-    LOGIN_INVALID_PASSWORD = 3,
-    INVALID_TOKEN = 4
+var Status = {
+    SUCCESS = 0,
+    DATABASE_ERROR = 1,
+    REGISTER_USER_ALREADY_EXISTS = 2,
+    LOGIN_INVALID_USERNAME = 3,
+    LOGIN_INVALID_PASSWORD = 4,
+    INVALID_TOKEN = 5
 };
-Object.freeze(UserServiceErrors);
-exports.UserServiceErrors = UserServiceErrors;
+Object.freeze(Status);
+exports.Status = Status;
 
 var authTokens = {};
 
@@ -20,15 +21,15 @@ exports.usernameFromToken = function(token) {
 exports.register = function(username, password, callback) {
     persistence.userExists(username, function(userExists) {
         if (userExists === undefined) {
-            callback(false, UserServiceErrors.DATABASE_ERROR);
+            callback(Status.DATABASE_ERROR);
         } else if (userExists) {
-            callback(false, UserServiceErrors.REGISTER_USER_ALREADY_EXISTS);
+            callback(Status.REGISTER_USER_ALREADY_EXISTS);
         } else {
             persistence.createUser(username, password, function(success) {
                 if (success) {
-                    callback(true);
+                    callback(Status.SUCCESS);
                 } else {
-                    callback(false, UserServiceErrors.DATABASE_ERROR);
+                    callback(Status.DATABASE_ERROR);
                 }
             });
         }
@@ -38,19 +39,19 @@ exports.register = function(username, password, callback) {
 exports.login = function(username, password, callback) {
     persistence.userExists(username, function(userExists) {
         if (userExists === undefined) {
-            callback(false, UserServiceErrors.DATABASE_ERROR);
+            callback(Status.DATABASE_ERROR);
         } else if (!userExists) {
-            callback(false, UserServiceErrors.LOGIN_INVALID_USERNAME);
+            callback(Status.LOGIN_INVALID_USERNAME);
         } else {
             persistence.userPasswordMatch(username, password, function(match) {
                 if (match === undefined) {
-                    callback(false, UserServiceErrors.DATABASE_ERROR);
+                    callback(Status.DATABASE_ERROR);
                 } else if (!match) {
-                    callback(false, UserServiceErrors.LOGIN_INVALID_PASSWORD);
+                    callback(Status.LOGIN_INVALID_PASSWORD);
                 } else {
                     var token = tokens.createToken();
                     authTokens[token] = username;
-                    callback(true, token);
+                    callback(Status.SUCCESS, token);
                 }
             });
         }
@@ -59,7 +60,8 @@ exports.login = function(username, password, callback) {
 
 exports.logout = function(token) {
     if (!authTokens[token]) {
-        return UserServiceErrors.INVALID_TOKEN;
+        return Status.INVALID_TOKEN;
     }
     delete authTokens[token];
+    return Status.SUCCESS;
 }
