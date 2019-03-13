@@ -14,7 +14,6 @@
 
 ### Optional
 * nodemon: `npm install nodemon -g`
-* JSDoc: `npm install jsdoc -g`
 
 ### Run
 ```
@@ -25,9 +24,4 @@ node server.js
 ### Run with nodemon
 ```
 nodemon
-```
-
-### Generate JSDoc documentation
-```
-jsdoc . -c jsdoc_config.json
 ```
