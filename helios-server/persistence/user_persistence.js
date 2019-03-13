@@ -1,12 +1,12 @@
 var db_access = require('./db_access');
 
-const db_name = 'helios';
-const collection_users = 'users';
+const dbName = 'helios';
+const usersCollection = 'users';
 
-exports.user_exists = function(username, callback) {
+exports.userExists = function(username, callback) {
     db_access.connect(function(db) {
-        dbo = db.db(db_name);
-        dbo.collection(collection_users).countDocuments({username: username}, {}, function(err, res) {
+        dbo = db.db(dbName);
+        dbo.collection(usersCollection).countDocuments({username: username}, {}, function(err, res) {
             db.close();
             if (err) {
                 console.log('db_access', err);
@@ -18,14 +18,14 @@ exports.user_exists = function(username, callback) {
     });
 }
 
-exports.create_user = function(username, password, callback) {
+exports.createUser = function(username, password, callback) {
     db_access.connect(function(db) {
-        dbo = db.db(db_name);
+        dbo = db.db(dbName);
         var user = {
             username: username,
             password: password
         };
-        dbo.collection(collection_users).insertOne(user, function(err, res) {
+        dbo.collection(usersCollection).insertOne(user, function(err, res) {
             db.close();
             if (err) {
                 console.log('db_access', err);
@@ -37,14 +37,14 @@ exports.create_user = function(username, password, callback) {
     });
 }
 
-exports.user_password_match = function(username, password, callback) {
+exports.userPasswordMatch = function(username, password, callback) {
     db_access.connect(function(db) {
-        dbo = db.db(db_name);
+        dbo = db.db(dbName);
         var user = {
             username: username,
             password: password
         }
-        dbo.collection(collection_users).countDocuments(user, {}, function(err, res) {
+        dbo.collection(usersCollection).countDocuments(user, {}, function(err, res) {
             db.close();
             if (err) {
                 console.log('db_access', err);

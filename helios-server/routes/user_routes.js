@@ -1,4 +1,3 @@
-
 exports.register = function(request, response) {
 
 }
