@@ -9,7 +9,14 @@ exports.register = function(request, response) {
     } else {
         user_service.register(username, password, function(status) {
             if (status === user_service.Status.REGISTER_USER_ALREADY_EXISTS) {
-                response.sendStatus(http_status.CONFLICT);
+                response.status(http_status.BAD_REQUEST);
+                response.send('Username already taken');
+            } else if (status === user_service.Status.REGISTER_INVALID_USERNAME) {
+                response.status(http_status.BAD_REQUEST);
+                response.send('Invalid username');
+            } else if (status === user_service.Status.REGISTER_INVALID_PASSWORD) {
+                response.status(http_status.BAD_REQUEST);
+                response.send('Invalid password');
             } else if (status === user_service.Status.SUCCESS) {
                 response.sendStatus(http_status.OK);
             } else {

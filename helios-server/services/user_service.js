@@ -7,7 +7,9 @@ const Status = {
     REGISTER_USER_ALREADY_EXISTS: 2,
     LOGIN_INVALID_USERNAME: 3,
     LOGIN_INVALID_PASSWORD: 4,
-    INVALID_TOKEN: 5
+    INVALID_TOKEN: 5,
+    REGISTER_INVALID_USERNAME: 6,
+    REGISTER_INVALID_PASSWORD: 7
 };
 Object.freeze(Status);
 exports.Status = Status;
@@ -22,6 +24,10 @@ exports.register = function(username, password, callback) {
     persistence.userExists(username, function(userExists) {
         if (userExists === undefined) {
             callback(Status.DATABASE_ERROR);
+        } else if (!username || username.length < 5 || !/^\w+$/.test(username)) {
+            callback(Status.REGISTER_INVALID_USERNAME);
+        } else if (!password || password.length < 6) {
+            callback(Status.REGISTER_INVALID_PASSWORD);
         } else if (userExists) {
             callback(Status.REGISTER_USER_ALREADY_EXISTS);
         } else {
