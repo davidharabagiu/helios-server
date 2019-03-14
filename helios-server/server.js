@@ -10,9 +10,11 @@ app.get('/', function(request, response) {
 });
 
 app.post('/register', user_routes.register);
+app.post('/login', user_routes.login);
+app.post('/logout', user_routes.logout);
 
 var server = app.listen(8000, function() {
     var host = server.address().address;
     var port = server.address().port;
-    console.log(`Listening on {host}:{port}...`);
+    console.log(`Listening on ${host}:${port}...`);
 });

@@ -2,12 +2,12 @@ var persistence = require('../persistence/user_persistence');
 var tokens = require('../utils/tokens');
 
 const Status = {
-    SUCCESS = 0,
-    DATABASE_ERROR = 1,
-    REGISTER_USER_ALREADY_EXISTS = 2,
-    LOGIN_INVALID_USERNAME = 3,
-    LOGIN_INVALID_PASSWORD = 4,
-    INVALID_TOKEN = 5
+    SUCCESS: 0,
+    DATABASE_ERROR: 1,
+    REGISTER_USER_ALREADY_EXISTS: 2,
+    LOGIN_INVALID_USERNAME: 3,
+    LOGIN_INVALID_PASSWORD: 4,
+    INVALID_TOKEN: 5
 };
 Object.freeze(Status);
 exports.Status = Status;

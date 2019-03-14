@@ -8,7 +8,7 @@ exports.register = function(request, response) {
         response.sendStatus(http_status.BAD_REQUEST);
     } else {
         user_service.register(username, password, function(status) {
-            if (status === user_service.REGISTER_USER_ALREADY_EXISTS) {
+            if (status === user_service.Status.REGISTER_USER_ALREADY_EXISTS) {
                 response.sendStatus(http_status.CONFLICT);
             } else if (status === user_service.Status.SUCCESS) {
                 response.sendStatus(http_status.OK);
@@ -48,9 +48,9 @@ exports.login = function(request, response) {
 }
 
 exports.logout = function(request, response) {
-    token = request.body.token;
+    token = request.get('token');
     if (!token) {
-        response.sendStatus(http_status.BAD_REQUEST);
+        response.sendStatus(http_status.UNAUTHORIZED);
     } else {
         status = user_service.logout(token);
         if (status === user_service.Status.SUCCESS) {
