@@ -1,7 +1,7 @@
 var persistence = require('../persistence/user_persistence');
 var tokens = require('../utils/tokens');
 
-var Status = {
+const Status = {
     SUCCESS = 0,
     DATABASE_ERROR = 1,
     REGISTER_USER_ALREADY_EXISTS = 2,
