@@ -22,8 +22,8 @@ exports.usernameFromToken = function(token) {
 }
 
 exports.register = function(username, password, callback) {
-    persistence.userExists(username, function(userExists) {
-        if (userExists === undefined) {
+    persistence.findUser(username, function(user) {
+        if (user === undefined) {
             callback(Status.DATABASE_ERROR);
         } else if (!username || username.length < config.usernameRules.minimumLength ||
             !/^\w+$/.test(username)) {
@@ -35,10 +35,12 @@ exports.register = function(username, password, callback) {
             (config.passwordRules.mustContainSpecial &&
                 !/[-+!@#$%^&*():;'"\\?/,.<>=`~[\]{}|]/.test(password))) {
             callback(Status.REGISTER_INVALID_PASSWORD);
-        } else if (userExists) {
+        } else if (user !== null) {
             callback(Status.REGISTER_USER_ALREADY_EXISTS);
         } else {
-            persistence.createUser(username, password, function(success) {
+            var salt = auth_utils.createSalt();
+            var password_enc = auth_utils.encryptPassword(password, salt);
+            persistence.createUser(username, password_enc, salt, function(success) {
                 if (success) {
                     callback(Status.SUCCESS);
                 } else {
@@ -50,23 +52,20 @@ exports.register = function(username, password, callback) {
 }
 
 exports.login = function(username, password, callback) {
-    persistence.userExists(username, function(userExists) {
-        if (userExists === undefined) {
+    persistence.findUser(username, function(user) {
+        if (user === undefined) {
             callback(Status.DATABASE_ERROR);
-        } else if (!userExists) {
+        } else if (user === null) {
             callback(Status.LOGIN_INVALID_USERNAME);
         } else {
-            persistence.userPasswordMatch(username, password, function(match) {
-                if (match === undefined) {
-                    callback(Status.DATABASE_ERROR);
-                } else if (!match) {
-                    callback(Status.LOGIN_INVALID_PASSWORD);
-                } else {
-                    var token = auth_utils.createToken();
-                    authTokens[token] = username;
-                    callback(Status.SUCCESS, token);
-                }
-            });
+            var password_enc = auth_utils.encryptPassword(password, user.salt);
+            if (password_enc != user.password) {
+                callback(Status.LOGIN_INVALID_PASSWORD);
+            } else {
+                var token = auth_utils.createToken();
+                authTokens[token] = username;
+                callback(Status.SUCCESS, token);
+            }
         }
     });
 }

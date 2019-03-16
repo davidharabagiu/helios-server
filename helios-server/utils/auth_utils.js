@@ -2,7 +2,7 @@ var crypto = require('crypto');
 var config = require('../utils/config').config;
 
 const tokenLength = config.authentication.tokenLength;
-const pwdEncryptionIterations = config.authentication.password.encryptPassword;
+const pwdEncryptionIterations = config.authentication.password.encryptIterations;
 const saltLength = config.authentication.password.saltLength;
 
 exports.createToken = function() {
@@ -25,8 +25,7 @@ exports.createSalt = function() {
 exports.encryptPassword = function(password, salt) {
     var result = password + salt;
     for (i = 0; i < pwdEncryptionIterations; ++i) {
-        result = crypto.createHash('sha256').update(result).digest(
-            i === pwdEncryptionIterations - 1 ? 'hex' : 'base64');
+        result = crypto.createHash('sha256').update(result).digest('base64');
     }
     return result;
 }

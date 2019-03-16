@@ -17,9 +17,9 @@
         "mustContainSpecial": true
     },
     "authentication": {
-        "tokenLength": 48,
+        "tokenLength": 128,
         "password": {
-            "saltLength": 32,
+            "saltLength": 16,
             "encryptIterations": 1087
         }
     }

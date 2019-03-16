@@ -4,27 +4,13 @@ var config = require('../utils/config').config;
 const dbName = config.database.name;
 const usersCollection = config.database.collections.users;
 
-exports.userExists = function(username, callback) {
-    db_access.connect(function(db) {
-        dbo = db.db(dbName);
-        dbo.collection(usersCollection).countDocuments({username: username}, {}, function(err, res) {
-            db.close();
-            if (err) {
-                console.log('user_persistence', err);
-                callback(undefined);
-            } else {
-                callback(res > 0);
-            }
-        });
-    });
-}
-
-exports.createUser = function(username, password, callback) {
+exports.createUser = function(username, password, salt, callback) {
     db_access.connect(function(db) {
         dbo = db.db(dbName);
         var user = {
             username: username,
-            password: password
+            password: password,
+            salt: salt
         };
         dbo.collection(usersCollection).insertOne(user, function(err, res) {
             db.close();
@@ -38,20 +24,15 @@ exports.createUser = function(username, password, callback) {
     });
 }
 
-exports.userPasswordMatch = function(username, password, callback) {
+exports.findUser = function(username, callback) {
     db_access.connect(function(db) {
         dbo = db.db(dbName);
-        var user = {
-            username: username,
-            password: password
-        }
-        dbo.collection(usersCollection).countDocuments(user, {}, function(err, res) {
-            db.close();
+        dbo.collection(usersCollection).findOne({ username: username }, function(err, res) {
             if (err) {
                 console.log('user_persistence', err);
                 callback(undefined);
             } else {
-                callback(res > 0);
+                callback(res);
             }
         });
     });
