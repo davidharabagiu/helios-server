@@ -1,5 +1,6 @@
 var persistence = require('../persistence/user_persistence');
 var auth_utils = require('../utils/auth_utils');
+var config = require('../utils/config').config;
 
 const Status = {
     SUCCESS: 0,
@@ -24,9 +25,10 @@ exports.register = function(username, password, callback) {
     persistence.userExists(username, function(userExists) {
         if (userExists === undefined) {
             callback(Status.DATABASE_ERROR);
-        } else if (!username || username.length < 5 || !/^\w+$/.test(username)) {
+        } else if (!username || username.length < config.usernameRules.minimumLength ||
+            !/^\w+$/.test(username)) {
             callback(Status.REGISTER_INVALID_USERNAME);
-        } else if (!password || password.length < 6) {
+        } else if (!password || password.length < config.passwordRules.minimumLength) {
             callback(Status.REGISTER_INVALID_PASSWORD);
         } else if (userExists) {
             callback(Status.REGISTER_USER_ALREADY_EXISTS);

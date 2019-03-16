@@ -1,7 +1,8 @@
 var db_access = require('./db_access');
+var config = require('../utils/config').config;
 
-const dbName = 'helios';
-const usersCollection = 'users';
+const dbName = config.database.name;
+const usersCollection = config.database.collections.users;
 
 exports.userExists = function(username, callback) {
     db_access.connect(function(db) {

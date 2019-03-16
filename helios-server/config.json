@@ -1,0 +1,26 @@
+{
+    "database": {
+        "url": "mongodb://localhost:27017/",
+        "name": "helios",
+        "collections": {
+            "users": "users"
+        }
+    },
+    "usernameRules": {
+        "minimumLength": 5
+    },
+    "passwordRules": {
+        "minimumLength": 6,
+        "mustContainLowercase": true,
+        "mustContainUppercase": true,
+        "mustContainDigit": true,
+        "mustContainSpecial": true
+    },
+    "authentication": {
+        "tokenLength": 48,
+        "password": {
+            "saltLength": 16,
+            "encryptIterations": 1087
+        }
+    }
+}
