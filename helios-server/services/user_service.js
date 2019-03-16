@@ -1,5 +1,5 @@
 var persistence = require('../persistence/user_persistence');
-var tokens = require('../utils/tokens');
+var auth_utils = require('../utils/auth_utils');
 
 const Status = {
     SUCCESS: 0,
@@ -55,7 +55,7 @@ exports.login = function(username, password, callback) {
                 } else if (!match) {
                     callback(Status.LOGIN_INVALID_PASSWORD);
                 } else {
-                    var token = tokens.createToken();
+                    var token = auth_utils.createToken();
                     authTokens[token] = username;
                     callback(Status.SUCCESS, token);
                 }
