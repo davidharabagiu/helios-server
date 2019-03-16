@@ -19,7 +19,7 @@
     "authentication": {
         "tokenLength": 48,
         "password": {
-            "saltLength": 16,
+            "saltLength": 32,
             "encryptIterations": 1087
         }
     }
