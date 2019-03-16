@@ -28,7 +28,12 @@ exports.register = function(username, password, callback) {
         } else if (!username || username.length < config.usernameRules.minimumLength ||
             !/^\w+$/.test(username)) {
             callback(Status.REGISTER_INVALID_USERNAME);
-        } else if (!password || password.length < config.passwordRules.minimumLength) {
+        } else if (!password || password.length < config.passwordRules.minimumLength ||
+            (config.passwordRules.mustContainLowercase && !/[a-z]/.test(password)) ||
+            (config.passwordRules.mustContainUppercase && !/[A-Z]/.test(password)) ||
+            (config.passwordRules.mustContainDigit && !/[0-9]/.test(password)) ||
+            (config.passwordRules.mustContainSpecial &&
+                !/[-+!@#$%^&*():;'"\\?/,.<>=`~[\]{}|]/.test(password))) {
             callback(Status.REGISTER_INVALID_PASSWORD);
         } else if (userExists) {
             callback(Status.REGISTER_USER_ALREADY_EXISTS);
