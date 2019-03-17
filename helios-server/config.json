@@ -3,7 +3,8 @@
         "url": "mongodb://localhost:27017/",
         "name": "helios",
         "collections": {
-            "users": "users"
+            "users": "users",
+            "files": "files"
         }
     },
     "usernameRules": {
@@ -22,5 +23,8 @@
             "saltLength": 16,
             "encryptIterations": 1087
         }
+    },
+    "storage": {
+        "fileIdLength": 32
     }
 }
