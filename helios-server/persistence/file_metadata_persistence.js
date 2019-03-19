@@ -5,11 +5,10 @@ const dbName = config.database.name;
 const usersCollection = config.database.collections.users;
 const filesCollection = config.database.collections.files;
 
-exports.createRoot = function(storageId, callback) {
+exports.createRoot = function(callback) {
     db_access.connect(function(db) {
         dbo = db.db(dbName);
         newFile = {
-            storageId: storageId,
             name: '',
             isDir: true,
             children: []
@@ -32,23 +31,8 @@ exports.createFile = function(username, storageId, path, isDir, callback) {
             callback(false);
             return;
         }
-        var separator = path.lastIndexOf('/');
-        if (separator === -1) {
-            createFile(rootId, storageId, path, isDir, function(success) {
-                callback(success);
-            });
-        } else {
-            var dirName = path.substring(0, separator);
-            var fileName = path.substring(separator + 1, path.length);
-            findFile(rootId, dirName, function(parentId, dirId) {
-                if (!dirId) {
-                    callback(false);
-                    return;
-                }
-                createFile(dirId, storageId, fileName, isDir, function(success) {
-                    callback(success);
-                });
-            });
+        createFileFromPath(rootId, storageId, path, isDir, [], success) {
+            callback(success);
         }
     });
 }
@@ -89,6 +73,39 @@ exports.listFiles = function(username, path, callback) {
     });
 }
 
+exports.moveFile = function(username, srcPath, dstPath, callback) {
+    findRoot(username, function(rootId) {
+        if (!rootId) {
+            callback(false);
+            return;
+        }
+        findFile(rootId, srcPath, function(parentId, fileId) {
+            if (!parentId || !fileId) {
+                callback(false);
+                return;
+            }
+            dbo.collection(filesCollection).findOne({ _id: fileId }, {}, function(err, res) {
+                if (err) {
+                    callback(false);
+                    return;
+                }
+                isDir = res.isDir;
+                storageId = res.storageId;
+                children = res.children;
+                deleteFileOrDirectory(parentId, fileId, function(success) {
+                    if (!success) {
+                        callback(false);
+                        return;
+                    }
+                    createFileFromPath(rootId, storageId, dstPath, isDir, children, function(success) {
+                        callback(success);
+                    });
+                });
+            });
+        });
+    });
+}
+
 function listFiles(dirId, callback) {
     db_access.connect(function(db) {
         dbo = db.db(dbName);
@@ -108,16 +125,17 @@ function listFiles(dirId, callback) {
     });
 }
 
-function createFile(parentId, storageId, name, isDir, callback) {
+function createFile(parentId, storageId, name, isDir, children, callback) {
     db_access.connect(function(db) {
         dbo = db.db(dbName);
         newFile = {
-            storageId: storageId,
             name: name,
             isDir: isDir
         };
         if (isDir) {
-            newFile.children = [];
+            newFile.children = children;
+        } else {
+            newFile.storageId = storageId;
         }
         dbo.collection(filesCollection).insertOne(newFile, function(err, res) {
             if (err) {
@@ -142,6 +160,27 @@ function createFile(parentId, storageId, name, isDir, callback) {
             }
         });
     });
+}
+
+function createFileFromPath(rootId, storageId, path, isDir, children, callback) {
+    var separator = path.lastIndexOf('/');
+    if (separator === -1) {
+        createFile(rootId, storageId, path, isDir, children, function(success) {
+            callback(success);
+        });
+    } else {
+        var dirName = path.substring(0, separator);
+        var fileName = path.substring(separator + 1, path.length);
+        findFile(rootId, dirName, function(parentId, dirId) {
+            if (!dirId) {
+                callback(false);
+                return;
+            }
+            createFile(dirId, storageId, fileName, isDir, children, function(success) {
+                callback(success);
+            });
+        });
+    }
 }
 
 function deleteFileOrDirectory(parentId, id, callback) {

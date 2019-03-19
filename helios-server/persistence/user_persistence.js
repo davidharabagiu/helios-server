@@ -1,13 +1,12 @@
 var db_access = require('./db_access');
 var config = require('../utils/config').config;
-var file_db_operations = require('./file_db_operations');
-var file_storage = require('./file_storage');
+var file_metadata_persistence = require('./file_metadata_persistence');
 
 const dbName = config.database.name;
 const usersCollection = config.database.collections.users;
 
 exports.createUser = function(username, password, salt, callback) {
-    file_db_operations.createRoot(file_storage.createFileId(), function(rootId) {
+    file_metadata_persistence.createRoot(function(rootId) {
         if (!rootId) {
             callback(false);
         } else {
