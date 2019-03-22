@@ -1,5 +1,6 @@
 var db_access = require('./db_access');
 var config = require('../utils/config').config;
+var ObjectID = require('mongodb').ObjectID;
 
 const dbName = config.database.name;
 const usersCollection = config.database.collections.users;
@@ -19,7 +20,7 @@ exports.createRoot = function(callback) {
                 console.log('file_db_persistence', err);
                 callback();
             } else {
-                callback(insertedId);
+                callback(res.insertedId);
             }
         });
     });
@@ -31,25 +32,25 @@ exports.createFile = function(username, storageId, path, isDir, callback) {
             callback(false);
             return;
         }
-        createFileFromPath(rootId, storageId, path, isDir, [], success) {
+        createFileFromPath(rootId, storageId, path, isDir, [], function(success) {
             callback(success);
-        }
+        });
     });
 }
 
 exports.deleteFile = function(username, path, callback) {
     findRoot(username, function(rootId) {
         if (!rootId) {
-            callback(false);
+            callback();
             return;
         }
         findFile(rootId, path, function(parentId, fileId) {
-            if (!parentId || !fileId) {
-                callback(false);
+            if (!fileId) {
+                callback();
                 return;
             }
-            deleteFileOrDirectory(parentId, fileId, function(success) {
-                callback(success);
+            deleteFileOrDirectory(parentId, fileId, function(storageIds) {
+                callback(storageIds);
             });
         });
     });
@@ -84,21 +85,25 @@ exports.moveFile = function(username, srcPath, dstPath, callback) {
                 callback(false);
                 return;
             }
-            dbo.collection(filesCollection).findOne({ _id: fileId }, {}, function(err, res) {
-                if (err) {
-                    callback(false);
-                    return;
-                }
-                isDir = res.isDir;
-                storageId = res.storageId;
-                children = res.children;
-                deleteFileOrDirectory(parentId, fileId, function(success) {
-                    if (!success) {
+            db_access.connect(function(db) {
+                dbo = db.db(dbName);
+                dbo.collection(filesCollection).findOne({ _id: fileId }, {}, function(err, res) {
+                    db.close();
+                    if (err) {
                         callback(false);
                         return;
                     }
-                    createFileFromPath(rootId, storageId, dstPath, isDir, children, function(success) {
-                        callback(success);
+                    isDir = res.isDir;
+                    storageId = res.storageId;
+                    children = res.children;
+                    deleteFile(parentId, fileId, function(success) {
+                        if (!success) {
+                            callback(false);
+                            return;
+                        }
+                        createFileFromPath(rootId, storageId, dstPath, isDir, children, function(success) {
+                            callback(success);
+                        });
                     });
                 });
             });
@@ -116,8 +121,12 @@ function listFiles(dirId, callback) {
                 callback();
             } else {
                 fileList = [];
+                if (!res.isDir) {
+                    callback(fileList);
+                    return;
+                }
                 for (var i = 0; i < res.children.length; ++i) {
-                    fileList += res.children[i].name;
+                    fileList.push(res.children[i].name);
                 }
                 callback(fileList);
             }
@@ -146,8 +155,8 @@ function createFile(parentId, storageId, name, isDir, children, callback) {
                     childId: res.insertedId,
                     name: name
                 };
-                dbo.collection(filesCollection).updateOne({ _id: parentId },
-                    { $push: { newChild } }, {}, function(err, res) {
+                dbo.collection(filesCollection).updateOne({ _id: ObjectID(parentId) },
+                    { $push: { children: newChild } }, {}, function(err, res) {
                         db.close();
                         if (err) {
                             console.log('file_db_persistence', err);
@@ -190,21 +199,33 @@ function deleteFileOrDirectory(parentId, id, callback) {
             db.close();
             if (err) {
                 console.log('file_db_persistence', err);
-                callback(false);
+                callback();
             } else {
                 if (res.isDir) {
-                    emptyDirectory(id, function(success) {
-                        if (!success) {
-                            callback(false);
+                    emptyDirectory(id, function(storageIds) {
+                        if (!storageIds) {
+                            callback();
                         } else {
-                            deleteFile(parentId, id, function(success) {
-                                callback(success);
-                            });
+                            if (res.name !== '') {
+                                deleteFile(parentId, id, function(storageId) {
+                                    if (!storageId) {
+                                        callback();
+                                        return;
+                                    }
+                                    callback(storageIds);
+                                });
+                            } else {
+                                callback(storageIds);
+                            }
                         }
                     });
                 } else {
-                    deleteFile(parentId, id, function(success) {
-                        callback(success);
+                    deleteFile(parentId, id, function(storageId) {
+                        if (!storageId) {
+                            callback();
+                        } else {
+                            callback(storageId === 'dir' ? [] : [storageId]);
+                        }
                     });
                 }
             }
@@ -215,27 +236,43 @@ function deleteFileOrDirectory(parentId, id, callback) {
 function deleteFile(parentId, id, callback) {
     db_access.connect(function(db) {
         dbo = db.db(dbName);
-        dbo.collection(filesCollection).deleteOne({ _id: id }, {}, function(err, res) {
+        dbo.collection(filesCollection).findOne({ _id: id }, function(err, res) {
             if (err) {
                 console.log('file_db_persistence', err);
-                callback(false);
+                callback();
             } else {
-                dbo.collection(filesCollection).findOne({ _id: id }, function(err, res) {
+                if (!res) {
+                    callback();
+                    return;
+                }
+                var storageId = res.isDir ? 'dir' : res.storageId;
+                dbo.collection(filesCollection).deleteOne({ _id: id }, {}, function(err, res) {
                     if (err) {
                         console.log('file_db_persistence', err);
-                        callback(false);
+                        callback();
                     } else {
-                        dbo.collection(filesCollection).updateOne({ _id: parentId },
-                            { $pull: { children: { childId: id } } }, {}, function(err, res) {
-                                db.close(false);
-                                if (err) {
-                                    console.log('file_db_persistence', err);
-                                    callback(false);
-                                } else {
-                                    callback(true);
+                        dbo.collection(filesCollection).findOne({ _id: parentId }, function(err, res) {
+                            if (err) {
+                                console.log('file_db_persistence', err);
+                                callback();
+                            } else {
+                                if (!res) {
+                                    callback(storageId);
+                                    return;
                                 }
+                                dbo.collection(filesCollection).updateOne({ _id: parentId },
+                                    { $pull: { children: { childId: id } } }, {}, function(err, res) {
+                                        db.close();
+                                        if (err) {
+                                            console.log('file_db_persistence', err);
+                                            callback();
+                                        } else {
+                                            callback(storageId);
+                                        }
+                                    }
+                                );
                             }
-                        );
+                        });
                     }
                 });
             }
@@ -246,23 +283,27 @@ function deleteFile(parentId, id, callback) {
 function emptyDirectory(dirId, callback) {
     db_access.connect(function(db) {
         dbo = db.db(dbName);
-        dbo.collection(filesCollection).findOne({ _id: id }, {}, function(err, res) {
+        dbo.collection(filesCollection).findOne({ _id: dirId }, {}, function(err, res) {
             db.close();
             if (err) {
                 console.log('file_db_persistence', err);
-                callback(false);
+                callback();
             } else {
                 if (!res.isDir) {
-                    callback(false);
+                    callback();
                 } else {
+                    var storageIds = [];
                     var it = function(i) {
                         if (i === res.children.length) {
-                            callback(true);
+                            callback(storageIds);
                         } else {
-                            deleteFileOrDirectory(dirId, res.children[i].childId, function(success) {
-                                if (!success) {
-                                    callback(false);
+                            deleteFileOrDirectory(dirId, res.children[i].childId, function(ids) {
+                                if (!ids) {
+                                    callback();
                                 } else {
+                                    if (ids !== 'dir') {
+                                        storageIds.concat(ids);
+                                    }
                                     it(i + 1);
                                 }
                             });
@@ -284,7 +325,11 @@ function findRoot(username, callback) {
                 console.log('file_db_persistence', err);
                 callback();
             } else {
-                callback(res.rootId);
+                if (!res) {
+                    callback();
+                } else {
+                    callback(res.files);
+                }
             }
         });
     });
@@ -296,13 +341,14 @@ function findFile(parentId, path, callback) {
     }
     if (path === '') {
         callback(undefined, parentId);
+        return;
     }
     db_access.connect(function(db) {
         dbo = db.db(dbName);
         var separator = path.indexOf('/');
         var currentFile = separator === -1 ? path : path.substring(0, separator);
         path = separator === -1 ? '' : path.substring(separator + 1, path.length);
-        dbo.collection(filesCollection).findOne({ _id: parentId }, function(err, res) {
+        dbo.collection(filesCollection).findOne({ _id: ObjectID(parentId) }, function(err, res) {
             db.close();
             if (err) {
                 console.log('file_db_persistence', err);
@@ -317,7 +363,7 @@ function findFile(parentId, path, callback) {
                         if (path === '') {
                             callback(parentId, res.children[i].childId);
                         } else {
-                            findFile(parentId, path, callback);
+                            findFile(res.children[i].childId, path, callback);
                         }
                         return;
                     }
