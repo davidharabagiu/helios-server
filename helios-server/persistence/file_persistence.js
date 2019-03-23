@@ -157,6 +157,15 @@ exports.move = (username, srcPath, dstPath, callback) => {
     });
 };
 
+exports.list = (username, path, callback) => {
+    metadata.listFiles(username, path, (files) => {
+        if (!files && files !== []) {
+            console.log('file_persistence', `cannot list files in ${username}:/${path}`);
+        }
+        callback(files);
+    });
+};
+
 function createFileId() {
     const fileIdLength = config.storage.fileIdLength;
     abc = 'abcdefghijklmnopqrstuvwxyz1234567890'.split('');

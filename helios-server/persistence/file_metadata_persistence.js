@@ -66,13 +66,13 @@ exports.listFiles = (username, path, callback) => {
     findRoot(username, (rootId) => {
         if (!rootId) {
             console.log('file_db_persistence', `cannot find root folder for user ${username}`);
-            callback(false);
+            callback();
             return;
         }
         findFile(rootId, path, (parentId, fileId) => {
             if (!fileId) {
                 console.log('file_db_persistence', `cannot find file ${username}:/${path}`);
-                callback(false);
+                callback();
                 return;
             }
             listFiles(fileId, (files) => {
