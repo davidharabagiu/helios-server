@@ -166,6 +166,22 @@ exports.list = (username, path, callback) => {
     });
 };
 
+exports.createDirectory(username, path, callback) => {
+    metadata.getStorageId(username, path, (id) => {
+        if (id) {
+            console.log('file_persistence', `${username}:/${path} already exists`);
+            callback(false);
+            return;
+        }
+        metadata.createFile(username, undefined, path, true, (success) => {
+            if (!success) {
+                console.log('file_persistence', `cannot create directory ${username}:/${path}`);
+            }
+            callback(success);
+        });
+    });
+});
+
 function createFileId() {
     const fileIdLength = config.storage.fileIdLength;
     abc = 'abcdefghijklmnopqrstuvwxyz1234567890'.split('');
