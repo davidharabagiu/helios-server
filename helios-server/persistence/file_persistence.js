@@ -24,14 +24,16 @@ exports.open = (username, path, readonly, callback) => {
     metadata.getStorageId(username, path, (id) => {
         if (!id) {
             if (readonly) {
-                console.log('file_persistence', `cannot find file ${username}:/${path}`);
+                console.log('file_persistence',
+                    `cannot find file ${username}:/${path}`);
                 callback();
                 return;
             }
             id = createFileId();
             metadata.createFile(username, id, path, false, (success) => {
                 if (!success) {
-                    console.log('file_persistence', `cannot create file ${username}:/${path}`);
+                    console.log('file_persistence',
+                        `cannot create file ${username}:/${path}`);
                     callback();
                     return;
                 }
@@ -69,31 +71,30 @@ exports.write = (username, fd, buffer, offset, length, callback) => {
     file = openedFiles[fd];
     if (!file) {
         console.log('file_persistence', `invalid file descriptor ${fd}`);
-        callback(false);
+        callback(-1);
         return;
     }
     if (file.username !== username) {
         console.log('file_persistence', `${username} not allowed to access ${fd}`);
-        callback(false);
+        callback(-1);
         return;
     }
     if (file.readonly) {
         console.log('file_persistence', `file descriptor ${fd} is readonly`);
-        callback(false);
+        callback(-1);
         return;
     }
     fs.write(fd, buffer, 0, length, offset, (err, bytesWritten, buffer) => {
         if (err) {
             console.log('file_persistence', err);
-            callback(false);
+            callback(0);
             return;
         }
         if (length !== bytesWritten) {
-            console.log('file_persistence', `only ${bytesWritten} bytes out of ${length} were written`);
-            callback(false);
-            return;
+            console.log('file_persistence',
+                `only ${bytesWritten} bytes out of ${length} were written`);
         }
-        callback(true);
+        callback(bytesWritten);
     });
 };
 
@@ -101,12 +102,12 @@ exports.read = (username, fd, buffer, offset, length, callback) => {
     file = openedFiles[fd];
     if (!file) {
         console.log('file_persistence', `invalid file descriptor ${fd}`);
-        callback(0);
+        callback(-1);
         return;
     }
     if (file.username !== username) {
         console.log('file_persistence', `${username} not allowed to access ${fd}`);
-        callback(0);
+        callback(-1);
         return;
     }
     fs.read(fd, buffer, 0, length, offset, (err, bytesRead, buffer) => {
@@ -116,7 +117,8 @@ exports.read = (username, fd, buffer, offset, length, callback) => {
             return;
         }
         if (length !== bytesRead) {
-            console.log('file_persistence', `only ${bytesRead} bytes out of ${length} were read`);
+            console.log('file_persistence',
+                `only ${bytesRead} bytes out of ${length} were read`);
         }
         callback(bytesRead);
     });
@@ -160,27 +162,54 @@ exports.move = (username, srcPath, dstPath, callback) => {
 exports.list = (username, path, callback) => {
     metadata.listFiles(username, path, (files) => {
         if (!files && files !== []) {
-            console.log('file_persistence', `cannot list files in ${username}:/${path}`);
+            console.log('file_persistence',
+                `cannot list files in ${username}:/${path}`);
         }
         callback(files);
     });
 };
 
-exports.createDirectory(username, path, callback) => {
+exports.createDirectory = (username, path, callback) => {
+    metadata.createFile(username, undefined, path, true, (success) => {
+        if (!success) {
+            console.log('file_persistence',
+                `cannot create directory ${username}:/${path}`);
+        }
+        callback(success);
+    });
+};
+
+exports.fileExists = (username, path, callback) => {
     metadata.getStorageId(username, path, (id) => {
-        if (id) {
-            console.log('file_persistence', `${username}:/${path} already exists`);
-            callback(false);
+        callback(id ? true : false);
+    });
+};
+
+exports.getSize = (username, path, callback) => {
+    metadata.getStorageId(username, path, (id) => {
+        if (!id) {
+            console.log('file_persistence', `cannot find file ${username}:/${path}`);
+            callback(-2);
             return;
         }
-        metadata.createFile(username, undefined, path, true, (success) => {
-            if (!success) {
-                console.log('file_persistence', `cannot create directory ${username}:/${path}`);
+        if (id === 'dir') {
+            console.log('file_persistence', `${username}:/${path} is a directory`);
+            callback(-2);
+            return;
+        }
+        realPath = config.storage.path + '/' + id;
+        fs.stat(realPath, {
+            bigint: true
+        }, (err, stats) => {
+            if (err) {
+                console.log('file_persistence', err);
+                callback(-1);
+            } else {
+                callback(stats.size);
             }
-            callback(success);
         });
     });
-});
+};
 
 function createFileId() {
     const fileIdLength = config.storage.fileIdLength;
@@ -195,7 +224,9 @@ function createFileId() {
 fs.access(config.storage.path, fs.constants.F_OK, (err) => {
     if (err) {
         console.log('file_persistence', 'creating file storage directory');
-        fs.mkdir(config.storage.path, { recursive: true }, (err) => {
+        fs.mkdir(config.storage.path, {
+            recursive: true
+        }, (err) => {
             if (err) {
                 console.log('file_persistence', err);
             }

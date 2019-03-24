@@ -7,7 +7,7 @@
     * Express 4.6.14
     * Body Parser 1.18.3
     * MongoDB 3.1.13
-    * Winston 3.2.1
+    * Rwlock 5.0.0
 
 ### Setup
 * Add `<path_to_mongodb>/bin` to PATH
