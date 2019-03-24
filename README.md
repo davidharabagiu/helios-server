@@ -11,8 +11,8 @@
 
 ### Setup
 * Add `<path_to_mongodb>/bin` to PATH
-* `sudo mkdir -p /data/db`
-* `sudo chown <current_user> /data`
+* `mkdir -p /data/db`
+* `chown <current_user> /data`
 * `npm install`
 
 ### Optional
