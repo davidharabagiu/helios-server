@@ -5,7 +5,9 @@ var MongoClient = mongodb.MongoClient;
 const url = config.database.url;
 
 exports.connect = function(callback) {
-    MongoClient.connect(url, { useNewUrlParser: true }, function (err, db) {
+    MongoClient.connect(url, {
+        useNewUrlParser: true
+    }, function(err, db) {
         if (err) {
             throw err;
         }
