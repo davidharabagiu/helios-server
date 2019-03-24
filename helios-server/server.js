@@ -3,7 +3,9 @@ var bodyParser = require('body-parser');
 var user_routes = require('./routes/user_routes');
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({
+    extended: true
+}));
 
 app.get('/', function(request, response) {
     response.send('Welcome to Helios!');

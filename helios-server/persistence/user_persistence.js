@@ -18,7 +18,8 @@ exports.createUser = function(username, password, salt, callback) {
                     salt: salt,
                     files: rootId
                 };
-                dbo.collection(usersCollection).insertOne(user, function(err, res) {
+                dbo.collection(usersCollection).insertOne(user, function(err,
+                    res) {
                     db.close();
                     if (err) {
                         console.log('user_persistence', err);
@@ -35,7 +36,9 @@ exports.createUser = function(username, password, salt, callback) {
 exports.findUser = function(username, callback) {
     db_access.connect(function(db) {
         dbo = db.db(dbName);
-        dbo.collection(usersCollection).findOne({ username: username }, function(err, res) {
+        dbo.collection(usersCollection).findOne({
+            username: username
+        }, function(err, res) {
             db.close();
             if (err) {
                 console.log('user_persistence', err);

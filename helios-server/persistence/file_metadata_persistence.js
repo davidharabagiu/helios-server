@@ -206,7 +206,10 @@ function listFiles(dirId, callback) {
                 return;
             }
             for (var i = 0; i < res.children.length; ++i) {
-                fileList.push(res.children[i].name);
+                fileList.push({
+                    name: res.children[i].name,
+                    isDir: res.isDir
+                });
             }
             callback(fileList);
         });

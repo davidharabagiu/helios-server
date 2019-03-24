@@ -171,7 +171,7 @@ exports.endTransfer = (username, transferId, callback) => {
 };
 
 exports.size = (username, path, callback) => {
-    files.fileExists(username, split.dir, (exists) => {
+    files.fileExists(username, path, (exists) => {
         if (!exists) {
             callback(Status.INVALID_PATH);
             return;
@@ -184,6 +184,53 @@ exports.size = (username, path, callback) => {
             } else {
                 callback(Status.SUCCESS, size);
             }
+        });
+    });
+};
+
+exports.list = (username, path, callback) => {
+    files.fileExists(username, path, (exists) => {
+        if (!exists) {
+            callback(Status.INVALID_PATH);
+            return;
+        }
+        files.list(username, path, (files) => {
+            if (!files) {
+                callback(Status.UNKNOWN_ERROR);
+            } else {
+                callback(Status.SUCCESS, files);
+            }
+        });
+    });
+};
+
+exports.delete = (username, path, callback) => {
+    files.fileExists(username, path, (exists) => {
+        if (!exists) {
+            callback(Status.INVALID_PATH);
+            return;
+        }
+        files.delete(username, path, (success) => {
+            callback(success ? Status.SUCCESS : Status.UNKNOWN_ERROR);
+        });
+    });
+};
+
+exports.move = (username, src, dst, callback) => {
+    files.fileExists(username, src, (srcExists) => {
+        if (!srcExists) {
+            callback(Status.INVALID_PATH);
+            return;
+        }
+        files.fileExists(username, dst, (dstExists) => {
+            if (dstExists) {
+                callback(Status.FILE_ALREADY_EXISTS);
+                return;
+            }
+            files.move(username, src, dst, (success) => {
+                callback(success ? Status.SUCCESS : Status
+                    .UNKNOWN_ERROR);
+            });
         });
     });
 };
