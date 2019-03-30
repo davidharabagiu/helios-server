@@ -10,6 +10,8 @@ const Status = {
     UNAUTHORIZED = 5,
     IO_ERROR = 6
 };
+Object.freeze(Status);
+exports.Status = Status;
 
 var transfers = {};
 

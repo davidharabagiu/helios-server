@@ -1,19 +1,17 @@
 var app = require('express')();
 var bodyParser = require('body-parser');
-var user_routes = require('./routes/user_routes');
+var urls = require('./urls');
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
     extended: true
 }));
 
-app.get('/', function(request, response) {
+app.get('/', (request, response) => {
     response.send('Welcome to Helios!');
 });
 
-app.post('/register', user_routes.register);
-app.post('/login', user_routes.login);
-app.post('/logout', user_routes.logout);
+urls.register(app);
 
 var server = app.listen(8000, function() {
     var host = server.address().address;
