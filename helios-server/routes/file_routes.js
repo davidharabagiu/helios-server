@@ -219,6 +219,32 @@ exports.download = (request, response) => {
     });
 };
 
+exports.upload = (require, response) => {
+    var username = authorize(request, response);
+    if (!username) {
+        return;
+    }
+    var transferId = request.body.transferId;
+    var offset = request.body.offset;
+    if (!transferId || !offset || !request.file) {
+        response.sendStatus(http_status.BAD_REQUEST);
+        return;
+    }
+    file_service.upload(username, transferId, request.file.buffer, offset, request.file.size, (
+        status) => {
+        if (status === file_service.Status.SUCCESS) {
+            response.sendStatus(http_status.OK);
+        } else if (status === file_service.Status.INVALID_TRANSFER_ID) {
+            response.status(http_status.BAD_REQUEST);
+            response.send('Invalid transfer id');
+        } else if (status === file_service.Status.UNAUTHORIZED) {
+            response.sendStatus(http_status.UNAUTHORIZED);
+        } else {
+            response.sendStatus(http_status.INTERNAL_SERVER_ERROR);
+        }
+    });
+};
+
 function authorize(request, response) {
     token = request.get('token');
     if (!token) {

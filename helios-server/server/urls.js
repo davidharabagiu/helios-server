@@ -1,11 +1,14 @@
 var user_routes = require('../routes/user_routes');
 var file_routes = require('../routes/file_routes');
 var bodyParser = require('body-parser');
+var multer = require('multer');
 
 exports.register = (app) => {
     var urlEncodedParser = bodyParser.urlencoded({
         extended: true
     });
+
+    var formData = multer();
 
     // User routes
     app.post('/register', urlEncodedParser, user_routes.register);
@@ -21,5 +24,6 @@ exports.register = (app) => {
     app.get('/list', urlEncodedParser, file_routes.list);
     app.post('/delete', urlEncodedParser, file_routes.delete);
     app.post('/move', urlEncodedParser, file_routes.move);
-    app.post('/download', urlEncodedParser, file_routes.download);
+    app.get('/download', urlEncodedParser, file_routes.download);
+    app.post('/upload', formData.single('data'), file_routes.upload);
 };
