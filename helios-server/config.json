@@ -26,6 +26,6 @@
     },
     "storage": {
         "fileIdLength": 32,
-        "path": "./storage"
+        "path": "../storage"
     }
 }

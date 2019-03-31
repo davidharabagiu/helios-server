@@ -218,44 +218,43 @@ function listFiles(dirId, callback) {
 
 function createFile(parentId, storageId, name, isDir, children, callback) {
     db_access.connect((db) => {
-            dbo = db.db(dbName);
-            newFile = {
-                name: name,
-                isDir: isDir
-            };
-            if (isDir) {
-                newFile.children = children;
-                newFile.storageId = 'dir';
-            } else {
-                newFile.storageId = storageId;
+        dbo = db.db(dbName);
+        newFile = {
+            name: name,
+            isDir: isDir
+        };
+        if (isDir) {
+            newFile.children = children;
+            newFile.storageId = 'dir';
+        } else {
+            newFile.storageId = storageId;
+        }
+        dbo.collection(filesCollection).insertOne(newFile, (err, res) => {
+            if (err) {
+                console.log('file_db_persistence', err);
+                callback(false);
+                return;
             }
-            dbo.collection(filesCollection).insertOne(newFile, (err, res) => {
-                    if (err) {
-                        console.log('file_db_persistence', err);
-                        callback(false);
-                        return;
-                    }
-                    var newChild = {
-                        childId: res.insertedId,
-                        name: name
-                    };
-                    dbo.collection(filesCollection).updateOne({
-                        _id: ObjectID(parentId)
-                    }, {
-                        $push: {
-                            children: newChild
-                        }
-                    }, {}, (err, res) => {
-                        db.close();
-                        if (err) {
-                            console.log('file_db_persistence', err);
-                            callback(false);
-                            return;
-                        }
-                        callback(true);
-                    });
+            var newChild = {
+                childId: res.insertedId,
+                name: name
+            };
+            dbo.collection(filesCollection).updateOne({
+                _id: ObjectID(parentId)
+            }, {
+                $push: {
+                    children: newChild
                 }
+            }, {}, (err, res) => {
+                db.close();
+                if (err) {
+                    console.log('file_db_persistence', err);
+                    callback(false);
+                    return;
+                }
+                callback(true);
             });
+        });
     });
 }
 
