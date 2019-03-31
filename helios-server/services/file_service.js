@@ -2,13 +2,13 @@ var files = require('../persistence/file_persistence');
 var rwlock = require('rwlock');
 
 const Status = {
-    SUCCESS = 0,
-    FILE_ALREADY_EXISTS = 1,
-    INVALID_PATH = 2,
-    UNKNOWN_ERROR = 3,
-    INVALID_TRANSFER_ID = 4,
-    UNAUTHORIZED = 5,
-    IO_ERROR = 6
+    SUCCESS: 0,
+    FILE_ALREADY_EXISTS: 1,
+    INVALID_PATH: 2,
+    UNKNOWN_ERROR: 3,
+    INVALID_TRANSFER_ID: 4,
+    UNAUTHORIZED: 5,
+    IO_ERROR: 6
 };
 Object.freeze(Status);
 exports.Status = Status;
