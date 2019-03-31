@@ -8,6 +8,7 @@
     * Body Parser 1.18.3
     * MongoDB 3.1.13
     * Rwlock 5.0.0
+    * Multer 1.4.1
 
 ### Setup
 * Add `<path_to_mongodb>/bin` to PATH
