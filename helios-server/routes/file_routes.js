@@ -191,6 +191,34 @@ exports.move = (request, response) => {
     });
 };
 
+exports.download = (request, response) => {
+    var username = authorize(request, response);
+    if (!username) {
+        return;
+    }
+    var transferId = request.body.transferId;
+    var offset = request.body.offset;
+    var length = request.body.length;
+    if (!transferId || !offset || !length) {
+        response.sendStatus(http_status.BAD_REQUEST);
+        return;
+    }
+    var buffer = new Buffer();
+    file_service.download(username, transferId, buffer, offset, length, (status) => {
+        if (status === file_service.Status.SUCCESS) {
+            response.status(http_status.OK);
+            response.send(buffer);
+        } else if (status === file_service.Status.INVALID_TRANSFER_ID) {
+            response.status(http_status.BAD_REQUEST);
+            response.send('Invalid transfer id');
+        } else if (status === file_service.Status.UNAUTHORIZED) {
+            response.sendStatus(http_status.UNAUTHORIZED);
+        } else {
+            response.sendStatus(http_status.INTERNAL_SERVER_ERROR);
+        }
+    });
+};
+
 function authorize(request, response) {
     token = request.get('token');
     if (!token) {
