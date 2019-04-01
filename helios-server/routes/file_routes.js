@@ -37,10 +37,10 @@ exports.beginUpload = (request, response) => {
         response.sendStatus(http_status.BAD_REQUEST);
         return;
     }
-    file_service.mkdir(username, path, (status, transferId) => {
+    file_service.beginUpload(username, path, (status, transferId) => {
         if (status === file_service.Status.SUCCESS) {
             response.status(http_status.OK);
-            response.send(transferId);
+            response.send(String(transferId));
         } else if (status === file_service.Status.INVALID_PATH) {
             response.status(http_status.BAD_REQUEST);
             response.send('Invalid path');
@@ -63,7 +63,7 @@ exports.beginDownload = (request, response) => {
     file_service.mkdir(username, path, (status, transferId) => {
         if (status === file_service.Status.SUCCESS) {
             response.status(http_status.OK);
-            response.send(transferId);
+            response.send(String(transferId));
         } else if (status === file_service.Status.INVALID_PATH) {
             response.status(http_status.BAD_REQUEST);
             response.send('Invalid path');
@@ -110,7 +110,7 @@ exports.size = (request, response) => {
     file_service.size(username, path, (status, size) => {
         if (status === file_service.Status.SUCCESS) {
             response.status(http_status.OK);
-            response.send(size);
+            response.send(String(size));
         } else if (status === file_service.Status.INVALID_PATH) {
             response.status(http_status.BAD_REQUEST);
             response.send('Invalid path');
@@ -126,7 +126,7 @@ exports.list = (request, response) => {
         return;
     }
     var path = request.body.path;
-    if (!path) {
+    if (!path && path !== '') {
         response.sendStatus(http_status.BAD_REQUEST);
         return;
     }
@@ -204,7 +204,8 @@ exports.download = (request, response) => {
         return;
     }
     var buffer = new Buffer();
-    file_service.download(username, transferId, buffer, offset, length, (status) => {
+    file_service.download(username, transferId, buffer, Number(offset), Number(length), (
+        status) => {
         if (status === file_service.Status.SUCCESS) {
             response.status(http_status.OK);
             response.send(buffer);
@@ -219,7 +220,7 @@ exports.download = (request, response) => {
     });
 };
 
-exports.upload = (require, response) => {
+exports.upload = (request, response) => {
     var username = authorize(request, response);
     if (!username) {
         return;
@@ -230,19 +231,20 @@ exports.upload = (require, response) => {
         response.sendStatus(http_status.BAD_REQUEST);
         return;
     }
-    file_service.upload(username, transferId, request.file.buffer, offset, request.file.size, (
-        status) => {
-        if (status === file_service.Status.SUCCESS) {
-            response.sendStatus(http_status.OK);
-        } else if (status === file_service.Status.INVALID_TRANSFER_ID) {
-            response.status(http_status.BAD_REQUEST);
-            response.send('Invalid transfer id');
-        } else if (status === file_service.Status.UNAUTHORIZED) {
-            response.sendStatus(http_status.UNAUTHORIZED);
-        } else {
-            response.sendStatus(http_status.INTERNAL_SERVER_ERROR);
-        }
-    });
+    file_service.upload(username, transferId, request.file.buffer, Number(offset), request.file
+        .size, (
+            status) => {
+            if (status === file_service.Status.SUCCESS) {
+                response.sendStatus(http_status.OK);
+            } else if (status === file_service.Status.INVALID_TRANSFER_ID) {
+                response.status(http_status.BAD_REQUEST);
+                response.send('Invalid transfer id');
+            } else if (status === file_service.Status.UNAUTHORIZED) {
+                response.sendStatus(http_status.UNAUTHORIZED);
+            } else {
+                response.sendStatus(http_status.INTERNAL_SERVER_ERROR);
+            }
+        });
 };
 
 function authorize(request, response) {

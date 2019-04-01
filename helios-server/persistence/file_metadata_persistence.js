@@ -164,7 +164,7 @@ exports.getStorageId = (username, path, callback) => {
             db_access.connect((db) => {
                 dbo = db.db(dbName);
                 dbo.collection(filesCollection).findOne({
-                    _id: dirId
+                    _id: childId
                 }, (err, res) => {
                     db.close();
                     if (err) {
@@ -173,9 +173,6 @@ exports.getStorageId = (username, path, callback) => {
                         return;
                     }
                     if (!res) {
-                        console.log('file_db_persistence',
-                            `cannot find file ${username}:/${path}`
-                        );
                         callback();
                         return;
                     }
@@ -208,7 +205,7 @@ function listFiles(dirId, callback) {
             for (var i = 0; i < res.children.length; ++i) {
                 fileList.push({
                     name: res.children[i].name,
-                    isDir: res.isDir
+                    isDir: res.children[i].isDir
                 });
             }
             callback(fileList);
@@ -237,7 +234,8 @@ function createFile(parentId, storageId, name, isDir, children, callback) {
             }
             var newChild = {
                 childId: res.insertedId,
-                name: name
+                name: name,
+                isDir: isDir
             };
             dbo.collection(filesCollection).updateOne({
                 _id: ObjectID(parentId)

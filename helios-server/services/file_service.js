@@ -1,5 +1,5 @@
 var files = require('../persistence/file_persistence');
-var rwlock = require('rwlock');
+var ReadWriteLock = require('rwlock');
 
 const Status = {
     SUCCESS: 0,
@@ -160,7 +160,7 @@ exports.endTransfer = (username, transferId, callback) => {
         return;
     }
     transfer.lock.writeLock((release) => {
-        files.close(username, fd, (success) => {
+        files.close(username, transfer.fd, (success) => {
             release();
             if (!success) {
                 callback(Status.IO_ERROR);
