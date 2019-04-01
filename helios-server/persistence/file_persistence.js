@@ -39,8 +39,9 @@ exports.open = (username, path, readonly, callback) => {
                 }
                 cont(id);
             });
+        } else {
+            cont(id);
         }
-        cont(id);
     });
 };
 
