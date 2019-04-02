@@ -18,7 +18,7 @@ exports.createRoot = (callback) => {
         dbo.collection(filesCollection).insertOne(newFile, (err, res) => {
             db.close();
             if (err) {
-                console.log('file_db_persistence', err);
+                console.log('file_metadata_persistence', err);
                 callback();
                 return;
             }
@@ -30,14 +30,14 @@ exports.createRoot = (callback) => {
 exports.createFile = (username, storageId, path, isDir, callback) => {
     findRoot(username, (rootId) => {
         if (!rootId) {
-            console.log('file_db_persistence',
+            console.log('file_metadata_persistence',
                 `cannot find root folder for user ${username}`);
             callback(false);
             return;
         }
         createFileFromPath(rootId, storageId, path, isDir, [], (success) => {
             if (!success) {
-                console.log('file_db_persistence',
+                console.log('file_metadata_persistence',
                     `cannot create file ${username}:/${path}`);
             }
             callback(success);
@@ -48,14 +48,14 @@ exports.createFile = (username, storageId, path, isDir, callback) => {
 exports.deleteFile = (username, path, callback) => {
     findRoot(username, (rootId) => {
         if (!rootId) {
-            console.log('file_db_persistence',
+            console.log('file_metadata_persistence',
                 `cannot find root folder for user ${username}`);
             callback();
             return;
         }
         findFile(rootId, path, (parentId, fileId) => {
             if (!fileId) {
-                console.log('file_db_persistence',
+                console.log('file_metadata_persistence',
                     `cannot find file ${username}:/${path}`);
                 callback();
                 return;
@@ -70,14 +70,14 @@ exports.deleteFile = (username, path, callback) => {
 exports.listFiles = (username, path, callback) => {
     findRoot(username, (rootId) => {
         if (!rootId) {
-            console.log('file_db_persistence',
+            console.log('file_metadata_persistence',
                 `cannot find root folder for user ${username}`);
             callback();
             return;
         }
         findFile(rootId, path, (parentId, fileId) => {
             if (!fileId) {
-                console.log('file_db_persistence',
+                console.log('file_metadata_persistence',
                     `cannot find file ${username}:/${path}`);
                 callback();
                 return;
@@ -92,20 +92,20 @@ exports.listFiles = (username, path, callback) => {
 exports.moveFile = (username, srcPath, dstPath, callback) => {
     findRoot(username, (rootId) => {
         if (!rootId) {
-            console.log('file_db_persistence',
+            console.log('file_metadata_persistence',
                 `cannot find root folder for user ${username}`);
             callback(false);
             return;
         }
         findFile(rootId, srcPath, (parentId, fileId) => {
             if (!fileId) {
-                console.log('file_db_persistence',
+                console.log('file_metadata_persistence',
                     `cannot find file ${username}:/${path}`);
                 callback(false);
                 return;
             }
             if (!parentId) {
-                console.log('file_db_persistence',
+                console.log('file_metadata_persistence',
                     `cannot move ${username}:/${srcPath}`);
                 callback(false);
                 return;
@@ -117,7 +117,8 @@ exports.moveFile = (username, srcPath, dstPath, callback) => {
                 }, {}, (err, res) => {
                     db.close();
                     if (err) {
-                        console.log('file_db_persistence', err);
+                        console.log('file_metadata_persistence',
+                            err);
                         callback(false);
                         return;
                     }
@@ -127,7 +128,7 @@ exports.moveFile = (username, srcPath, dstPath, callback) => {
                     deleteFile(parentId, fileId, (success) => {
                         if (!success) {
                             console.log(
-                                'file_db_persistence',
+                                'file_metadata_persistence',
                                 `cannot delete ${username}:/${srcPath}`
                             );
                             callback(false);
@@ -139,7 +140,7 @@ exports.moveFile = (username, srcPath, dstPath, callback) => {
                                 success) => {
                                 if (!success) {
                                     console.log(
-                                        'file_db_persistence',
+                                        'file_metadata_persistence',
                                         `cannot create file ${username}:/${dstPath}`
                                     );
                                 }
@@ -155,7 +156,7 @@ exports.moveFile = (username, srcPath, dstPath, callback) => {
 exports.getStorageId = (username, path, callback) => {
     findRoot(username, (rootId) => {
         if (!rootId) {
-            console.log('file_db_persistence',
+            console.log('file_metadata_persistence',
                 `cannot find root folder for user ${username}`);
             callback();
             return;
@@ -168,7 +169,8 @@ exports.getStorageId = (username, path, callback) => {
                 }, (err, res) => {
                     db.close();
                     if (err) {
-                        console.log('file_db_persistence', err);
+                        console.log('file_metadata_persistence',
+                            err);
                         callback();
                         return;
                     }
@@ -191,13 +193,13 @@ function listFiles(dirId, callback) {
         }, (err, res) => {
             db.close();
             if (err) {
-                console.log('file_db_persistence', err);
+                console.log('file_metadata_persistence', err);
                 callback();
                 return;
             }
             fileList = [];
             if (!res.isDir) {
-                console.log('file_db_persistence',
+                console.log('file_metadata_persistence',
                     `${dirId} is not a directory`);
                 callback(fileList);
                 return;
@@ -228,7 +230,7 @@ function createFile(parentId, storageId, name, isDir, children, callback) {
         }
         dbo.collection(filesCollection).insertOne(newFile, (err, res) => {
             if (err) {
-                console.log('file_db_persistence', err);
+                console.log('file_metadata_persistence', err);
                 callback(false);
                 return;
             }
@@ -246,7 +248,7 @@ function createFile(parentId, storageId, name, isDir, children, callback) {
             }, {}, (err, res) => {
                 db.close();
                 if (err) {
-                    console.log('file_db_persistence', err);
+                    console.log('file_metadata_persistence', err);
                     callback(false);
                     return;
                 }
@@ -261,7 +263,8 @@ function createFileFromPath(rootId, storageId, path, isDir, children, callback) 
     if (separator === -1) {
         createFile(rootId, storageId, path, isDir, children, (success) => {
             if (!success) {
-                console.log('file_db_persistence', `cannot create file ${rootId}:/${path}`);
+                console.log('file_metadata_persistence',
+                    `cannot create file ${rootId}:/${path}`);
             }
             callback(success);
         });
@@ -270,16 +273,33 @@ function createFileFromPath(rootId, storageId, path, isDir, children, callback) 
         var fileName = path.substring(separator + 1, path.length);
         findFile(rootId, dirName, function(parentId, dirId) {
             if (!dirId) {
-                console.log('file_db_persistence', `cannot find file ${rootId}:/${path}`);
+                console.log('file_metadata_persistence',
+                    `cannot find file ${rootId}:/${path}`);
                 callback(false);
                 return;
             }
-            createFile(dirId, storageId, fileName, isDir, children, function(success) {
-                if (!success) {
-                    console.log('file_db_persistence',
-                        `cannot create file ${rootId}:/${path}`);
-                }
-                callback(success);
+            db_access.connect(function(db) {
+                dbo = db.db(dbName);
+                dbo.collection(filesCollection).findOne({
+                    _id: dirId
+                }, {}, (err, res) => {
+                    db.close();
+                    if (!res.isDir) {
+                        console.log('file_metadata_persistence',
+                            `${rootId}:/${dirId} is not a directory`);
+                        callback(false);
+                        return;
+                    }
+                    createFile(dirId, storageId, fileName, isDir, children,
+                        function(success) {
+                            if (!success) {
+                                console.log('file_metadata_persistence',
+                                    `cannot create file ${rootId}:/${path}`
+                                );
+                            }
+                            callback(success);
+                        });
+                })
             });
         });
     }
@@ -293,14 +313,14 @@ function deleteFileOrDirectory(parentId, id, callback) {
         }, {}, (err, res) => {
             db.close();
             if (err) {
-                console.log('file_db_persistence', err);
+                console.log('file_metadata_persistence', err);
                 callback();
                 return;
             } else {
                 if (res.isDir) {
                     emptyDirectory(id, (storageIds) => {
-                        if (!storageIds) {
-                            console.log('file_db_persistence',
+                        if (!storageIds && storageIds !== []) {
+                            console.log('file_metadata_persistence',
                                 `cannot empty directory ${id}`);
                             callback();
                             return;
@@ -309,7 +329,7 @@ function deleteFileOrDirectory(parentId, id, callback) {
                             deleteFile(parentId, id, (storageId) => {
                                 if (!storageId) {
                                     console.log(
-                                        'file_db_persistence',
+                                        'file_metadata_persistence',
                                         `cannot delete file ${id}`
                                     );
                                     callback();
@@ -318,7 +338,7 @@ function deleteFileOrDirectory(parentId, id, callback) {
                                 callback(storageIds);
                             });
                         } else {
-                            console.log('file_db_persistence',
+                            console.log('file_metadata_persistence',
                                 `cannot delete root ${id}`);
                             callback(storageIds);
                         }
@@ -326,7 +346,7 @@ function deleteFileOrDirectory(parentId, id, callback) {
                 } else {
                     deleteFile(parentId, id, (storageId) => {
                         if (!storageId) {
-                            console.log('file_db_persistence',
+                            console.log('file_metadata_persistence',
                                 `cannot delete file ${id}`);
                             callback();
                             return;
@@ -346,12 +366,12 @@ function deleteFile(parentId, id, callback) {
             _id: id
         }, (err, res) => {
             if (err) {
-                console.log('file_db_persistence', err);
+                console.log('file_metadata_persistence', err);
                 callback();
                 return;
             }
             if (!res) {
-                console.log('file_db_persistence', `cannot find file ${id}`);
+                console.log('file_metadata_persistence', `cannot find file ${id}`);
                 callback();
                 return;
             }
@@ -360,7 +380,7 @@ function deleteFile(parentId, id, callback) {
                 _id: id
             }, {}, (err, res) => {
                 if (err) {
-                    console.log('file_db_persistence', err);
+                    console.log('file_metadata_persistence', err);
                     callback();
                     return;
                 }
@@ -368,12 +388,13 @@ function deleteFile(parentId, id, callback) {
                     _id: parentId
                 }, (err, res) => {
                     if (err) {
-                        console.log('file_db_persistence', err);
+                        console.log('file_metadata_persistence',
+                            err);
                         callback();
                         return;
                     }
                     if (!res) {
-                        console.log('file_db_persistence',
+                        console.log('file_metadata_persistence',
                             `cannot find file ${parentId}`);
                         callback();
                         return;
@@ -390,7 +411,7 @@ function deleteFile(parentId, id, callback) {
                         db.close();
                         if (err) {
                             console.log(
-                                'file_db_persistence',
+                                'file_metadata_persistence',
                                 err);
                             callback();
                             return;
@@ -411,12 +432,13 @@ function emptyDirectory(dirId, callback) {
         }, {}, (err, res) => {
             db.close();
             if (err) {
-                console.log('file_db_persistence', err);
+                console.log('file_metadata_persistence', err);
                 callback();
                 return;
             }
             if (!res.isDir) {
-                console.log('file_db_persistence', `${dirId} is not a directory`);
+                console.log('file_metadata_persistence',
+                    `${dirId} is not a directory`);
                 callback();
                 return;
             }
@@ -428,14 +450,14 @@ function emptyDirectory(dirId, callback) {
                 }
                 deleteFileOrDirectory(dirId, res.children[i].childId, (ids) => {
                     if (!ids) {
-                        console.log('file_db_persistence',
+                        console.log('file_metadata_persistence',
                             `cannot delete file ${res.children[i].childId}`
                         );
                         callback();
                         return;
                     }
                     if (ids !== 'dir') {
-                        storageIds.concat(ids);
+                        storageIds = storageIds.concat(ids);
                     }
                     it(i + 1);
                 });
@@ -453,12 +475,13 @@ function findRoot(username, callback) {
         }, (err, res) => {
             db.close();
             if (err) {
-                console.log('file_db_persistence', err);
+                console.log('file_metadata_persistence', err);
                 callback();
                 return;
             }
             if (!res) {
-                console.log('file_db_persistence', `cannot find user ${user}`);
+                console.log('file_metadata_persistence',
+                    `cannot find user ${user}`);
                 callback();
                 return;
             }
@@ -485,18 +508,18 @@ function findFile(parentId, path, callback) {
         }, (err, res) => {
             db.close();
             if (err) {
-                console.log('file_db_persistence', err);
+                console.log('file_metadata_persistence', err);
                 callback();
                 return;
             }
             if (!res) {
-                console.log('file_db_persistence',
+                console.log('file_metadata_persistence',
                     `cannot find file ${parentId}:/${path}`);
                 callback();
                 return;
             }
             if (!res.isDir) {
-                console.log('file_db_persistence',
+                console.log('file_metadata_persistence',
                     `${parentId}:/${path} is not a directory`);
                 callback();
                 return;

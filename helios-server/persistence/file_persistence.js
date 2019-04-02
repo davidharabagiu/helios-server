@@ -138,7 +138,7 @@ exports.delete = (username, path, callback) => {
                 return;
             }
             realPath = config.storage.path + '/' + ids[i];
-            fd.unlink(realPath, (err) => {
+            fs.unlink(realPath, (err) => {
                 if (err) {
                     console.log('file_persistence', err);
                     callback(false);
@@ -147,6 +147,7 @@ exports.delete = (username, path, callback) => {
                 it(i + 1);
             });
         };
+        it(0);
     });
 };
 
