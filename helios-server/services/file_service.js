@@ -136,12 +136,10 @@ exports.download = (username, transferId, buffer, offset, length, callback) => {
         return;
     }
     transfer.lock.readLock((release) => {
-        exports.read(username, transfer.fd, buffer, offset, length, (bytesRead) => {
+        files.read(username, transfer.fd, buffer, offset, length, (bytesRead) => {
             release();
             if (bytesRead === -1) {
                 callback(Status.UNKNOWN_ERROR);
-            } else if (bytesRead < length) {
-                callback(Status.IO_ERROR, bytesRead);
             } else {
                 callback(Status.SUCCESS, bytesRead);
             }
