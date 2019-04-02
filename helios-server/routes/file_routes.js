@@ -60,7 +60,7 @@ exports.beginDownload = (request, response) => {
         response.sendStatus(http_status.BAD_REQUEST);
         return;
     }
-    file_service.mkdir(username, path, (status, transferId) => {
+    file_service.beginDownload(username, path, (status, transferId) => {
         if (status === file_service.Status.SUCCESS) {
             response.status(http_status.OK);
             response.send(String(transferId));
@@ -203,7 +203,7 @@ exports.download = (request, response) => {
         response.sendStatus(http_status.BAD_REQUEST);
         return;
     }
-    var buffer = new Buffer();
+    var buffer = Buffer.alloc(Number(length));
     file_service.download(username, transferId, buffer, Number(offset), Number(length), (
         status) => {
         if (status === file_service.Status.SUCCESS) {
