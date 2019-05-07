@@ -14,6 +14,7 @@ exports.register = (app) => {
     app.post('/register', urlEncodedParser, user_routes.register);
     app.post('/login', urlEncodedParser, user_routes.login);
     app.post('/logout', urlEncodedParser, user_routes.logout);
+    app.get('/checktoken', urlEncodedParser, user_routes.checkToken);
 
     // File routes
     app.post('/mkdir', urlEncodedParser, file_routes.mkdir);
