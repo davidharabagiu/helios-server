@@ -71,8 +71,6 @@ exports.logout = function(request, response) {
 exports.checkToken = function(request, response) {
     var token = request.get('token');
     var username = request.query.username;
-    console.log(username);
-    console.log(token);
     if (!token || !username) {
         response.sendStatus(http_status.BAD_REQUEST);
     } else {
