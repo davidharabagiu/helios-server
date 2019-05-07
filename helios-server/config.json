@@ -12,10 +12,10 @@
     },
     "passwordRules": {
         "minimumLength": 6,
-        "mustContainLowercase": true,
-        "mustContainUppercase": true,
-        "mustContainDigit": true,
-        "mustContainSpecial": true
+        "mustContainLowercase": false,
+        "mustContainUppercase": false,
+        "mustContainDigit": false,
+        "mustContainSpecial": false
     },
     "authentication": {
         "tokenLength": 128,
