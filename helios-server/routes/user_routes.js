@@ -2,8 +2,8 @@ var user_service = require('../services/user_service');
 var http_status = require('../utils/http_status');
 
 exports.register = function(request, response) {
-    username = request.body.username;
-    password = request.body.password;
+    var username = request.body.username;
+    var password = request.body.password;
     if (!username || !password) {
         response.sendStatus(http_status.BAD_REQUEST);
     } else {
@@ -27,8 +27,8 @@ exports.register = function(request, response) {
 }
 
 exports.login = function(request, response) {
-    username = request.body.username;
-    password = request.body.password;
+    var username = request.body.username;
+    var password = request.body.password;
     if (!username || !password) {
         response.sendStatus(http_status.BAD_REQUEST);
     } else {
@@ -48,18 +48,33 @@ exports.login = function(request, response) {
                     response.sendStatus(http_status.INTERNAL_SERVER_ERROR);
                 }
             } else {
-                response.sendStatus(500);
+                response.sendStatus(http_status.INTERNAL_SERVER_ERROR);
             }
         });
     }
 }
 
 exports.logout = function(request, response) {
-    token = request.get('token');
+    var token = request.get('token');
     if (!token) {
         response.sendStatus(http_status.UNAUTHORIZED);
     } else {
-        status = user_service.logout(token);
+        var status = user_service.logout(token);
+        if (status === user_service.Status.SUCCESS) {
+            response.sendStatus(http_status.OK);
+        } else {
+            response.sendStatus(http_status.UNAUTHORIZED);
+        }
+    }
+}
+
+exports.checkToken = function(request, response) {
+    var token = request.get('token');
+    var username = request.body.username;
+    if (!token || !username) {
+        response.sendStatus(http_status.BAD_REQUEST);
+    } else {
+        var status = user_service.checkToken(username, token);
         if (status === user_service.Status.SUCCESS) {
             response.sendStatus(http_status.OK);
         } else {

@@ -77,3 +77,11 @@ exports.logout = function(token) {
     delete authTokens[token];
     return Status.SUCCESS;
 }
+
+exports.checkToken = function(username, token) {
+    if (!authTokens[token] || authTokens[token] !== username) {
+        return Status.INVALID_TOKEN;
+    } else {
+        return Status.SUCCESS;
+    }
+}
