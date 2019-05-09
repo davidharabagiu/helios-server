@@ -63,17 +63,26 @@ exports.beginDownload = (request, response) => {
         response.sendStatus(http_status.BAD_REQUEST);
         return;
     }
-    file_service.beginDownload(username, path, (status, transferId) => {
+    file_service.size(username, path, (status, size) => {
         if (status === file_service.Status.SUCCESS) {
-            response.status(http_status.OK);
-            response.send(String(transferId));
+            file_service.beginDownload(username, path, (status, transferId) => {
+                if (status === file_service.Status.SUCCESS) {
+                    response.status(http_status.OK);
+                    response.send(String(transferId) + '\n' + String(size));
+                } else if (status === file_service.Status.INVALID_PATH) {
+                    response.status(http_status.BAD_REQUEST);
+                    response.send('Invalid path');
+                } else {
+                    response.sendStatus(http_status.INTERNAL_SERVER_ERROR);
+                }
+            });
         } else if (status === file_service.Status.INVALID_PATH) {
             response.status(http_status.BAD_REQUEST);
             response.send('Invalid path');
         } else {
             response.sendStatus(http_status.INTERNAL_SERVER_ERROR);
         }
-    });
+    })
 };
 
 exports.endTransfer = (request, response) => {
