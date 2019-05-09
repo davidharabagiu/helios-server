@@ -5,6 +5,7 @@ var http_status = require('../utils/http_status');
 exports.mkdir = (request, response) => {
     var username = authorize(request, response);
     if (!username) {
+        response.sendStatus(http_status.UNAUTHORIZED);
         return;
     }
     var path = request.body.path;
@@ -30,6 +31,7 @@ exports.mkdir = (request, response) => {
 exports.beginUpload = (request, response) => {
     var username = authorize(request, response);
     if (!username) {
+        response.sendStatus(http_status.UNAUTHORIZED);
         return;
     }
     var path = request.body.path;
@@ -53,6 +55,7 @@ exports.beginUpload = (request, response) => {
 exports.beginDownload = (request, response) => {
     var username = authorize(request, response);
     if (!username) {
+        response.sendStatus(http_status.UNAUTHORIZED);
         return;
     }
     var path = request.body.path;
@@ -76,6 +79,7 @@ exports.beginDownload = (request, response) => {
 exports.endTransfer = (request, response) => {
     var username = authorize(request, response);
     if (!username) {
+        response.sendStatus(http_status.UNAUTHORIZED);
         return;
     }
     var transferId = request.body.transferId;
@@ -100,9 +104,10 @@ exports.endTransfer = (request, response) => {
 exports.size = (request, response) => {
     var username = authorize(request, response);
     if (!username) {
+        response.sendStatus(http_status.UNAUTHORIZED);
         return;
     }
-    var path = request.body.path;
+    var path = request.query.path;
     if (!path) {
         response.sendStatus(http_status.BAD_REQUEST);
         return;
@@ -123,9 +128,10 @@ exports.size = (request, response) => {
 exports.list = (request, response) => {
     var username = authorize(request, response);
     if (!username) {
+        response.sendStatus(http_status.UNAUTHORIZED);
         return;
     }
-    var path = request.body.path;
+    var path = request.query.path;
     if (!path && path !== '') {
         response.sendStatus(http_status.BAD_REQUEST);
         return;
@@ -146,6 +152,7 @@ exports.list = (request, response) => {
 exports.delete = (request, response) => {
     var username = authorize(request, response);
     if (!username) {
+        response.sendStatus(http_status.UNAUTHORIZED);
         return;
     }
     var path = request.body.path;
@@ -168,6 +175,7 @@ exports.delete = (request, response) => {
 exports.move = (request, response) => {
     var username = authorize(request, response);
     if (!username) {
+        response.sendStatus(http_status.UNAUTHORIZED);
         return;
     }
     var src = request.body.src;
@@ -194,11 +202,12 @@ exports.move = (request, response) => {
 exports.download = (request, response) => {
     var username = authorize(request, response);
     if (!username) {
+        response.sendStatus(http_status.UNAUTHORIZED);
         return;
     }
-    var transferId = request.body.transferId;
-    var offset = request.body.offset;
-    var length = request.body.length;
+    var transferId = request.query.transferId;
+    var offset = request.query.offset;
+    var length = request.query.length;
     if (!transferId || !offset || !length) {
         response.sendStatus(http_status.BAD_REQUEST);
         return;
@@ -223,6 +232,7 @@ exports.download = (request, response) => {
 exports.upload = (request, response) => {
     var username = authorize(request, response);
     if (!username) {
+        response.sendStatus(http_status.UNAUTHORIZED);
         return;
     }
     var transferId = request.body.transferId;
@@ -245,6 +255,27 @@ exports.upload = (request, response) => {
                 response.sendStatus(http_status.INTERNAL_SERVER_ERROR);
             }
         });
+};
+
+exports.isDir = (request, response) => {
+    var username = authorize(request, response);
+    if (!username) {
+        response.sendStatus(http_status.UNAUTHORIZED);
+        return;
+    }
+    var path = request.query.path;
+    if (!path) {
+        response.sendStatus(http_status.BAD_REQUEST);
+        return;
+    }
+    file_service.isDir(username, path, (status, dir) => {
+        if (status === file_service.Status.SUCCESS) {
+            response.status(http_status.OK);
+            response.send(dir ? 'true' : 'false');
+        } else {
+            response.sendStatus(http_status.INTERNAL_SERVER_ERROR);
+        }
+    });
 };
 
 function authorize(request, response) {

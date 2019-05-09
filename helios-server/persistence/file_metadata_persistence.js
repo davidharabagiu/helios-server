@@ -185,6 +185,38 @@ exports.getStorageId = (username, path, callback) => {
     });
 };
 
+exports.isDirectory = (username, path, callback) => {
+    findRoot(username, (rootId) => {
+        if (!rootId) {
+            console.log('file_metadata_persistence',
+                `cannot find root folder for user ${username}`);
+            callback();
+            return;
+        }
+        findFile(rootId, path, (parentId, childId) => {
+            db_access.connect((db) => {
+                dbo = db.db(dbName);
+                dbo.collection(filesCollection).findOne({
+                    _id: childId
+                }, (err, res) => {
+                    db.close();
+                    if (err) {
+                        console.log('file_metadata_persistence',
+                            err);
+                        callback();
+                        return;
+                    }
+                    if (!res) {
+                        callback(false);
+                        return;
+                    }
+                    callback(res.isDir);
+                });
+            });
+        });
+    });
+};
+
 function listFiles(dirId, callback) {
     db_access.connect((db) => {
         dbo = db.db(dbName);

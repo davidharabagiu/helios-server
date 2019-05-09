@@ -235,6 +235,18 @@ exports.move = (username, src, dst, callback) => {
     });
 };
 
+exports.isDir = (username, path, callback) => {
+    files.isDirectory(username, path, (dir) => {
+        if (dir === undefined) {
+            callback(Status.UNKNOWN_ERROR);
+        } else if (!dir) {
+            callback(Status.SUCCESS, false);
+        } else {
+            callback(Status.SUCCESS, dir);
+        }
+    });
+};
+
 function createTransferId(path) {
     var transferId;
     do {
