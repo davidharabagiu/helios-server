@@ -167,6 +167,28 @@ exports.list = (username, path, callback) => {
             console.log('file_persistence',
                 `cannot list files in ${username}:/${path}`);
         }
+        var filesWithSizeInfo = [];
+        var it = (idx) => {
+            if (idx == files.length) {
+                callback(filesWithSizeInfo);
+            }
+            if (files[i].isDir) {
+                filesWithSizeInfo.push(files[i]);
+            } else {
+                exports.getSize(username, path + '/' + files[i].name, (size) => {
+                    if (size < 0) {
+                        callback([]);
+                    } else {
+                        filesWithSizeInfo.push({
+                            name: files[i].name,
+                            isDir: files[i].isDir,
+                            size: size
+                        });
+                    }
+                });
+            }
+            it(idx + 1);
+        };
         callback(files);
     });
 };
@@ -210,6 +232,12 @@ exports.getSize = (username, path, callback) => {
                 callback(stats.size);
             }
         });
+    });
+};
+
+exports.isDirectory = (username, path, callback) => {
+    metadata.isDirectory(username, path, (dir) => {
+        callback(dir);
     });
 };
 
