@@ -229,13 +229,13 @@ function listFiles(dirId, callback) {
                 callback();
                 return;
             }
-            fileList = [];
             if (!res.isDir) {
                 console.log('file_metadata_persistence',
                     `${dirId} is not a directory`);
-                callback(fileList);
+                callback();
                 return;
             }
+            var fileList = [];
             for (var i = 0; i < res.children.length; ++i) {
                 fileList.push({
                     name: res.children[i].name,

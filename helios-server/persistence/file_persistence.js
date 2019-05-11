@@ -166,30 +166,36 @@ exports.list = (username, path, callback) => {
         if (!files && files !== []) {
             console.log('file_persistence',
                 `cannot list files in ${username}:/${path}`);
+            callback(['INVALID_PATH']);
+            return;
         }
         var filesWithSizeInfo = [];
         var it = (idx) => {
-            if (idx == files.length) {
+            if (idx === files.length) {
                 callback(filesWithSizeInfo);
+                return;
             }
-            if (files[i].isDir) {
-                filesWithSizeInfo.push(files[i]);
+            if (files[idx].isDir) {
+                filesWithSizeInfo.push(files[idx]);
+                it(idx + 1);
             } else {
-                exports.getSize(username, path + '/' + files[i].name, (size) => {
+                exports.getSize(username, (path === '') ? (files[idx].name) : (
+                    path +
+                    '/' + files[idx].name), (size) => {
                     if (size < 0) {
                         callback([]);
                     } else {
                         filesWithSizeInfo.push({
-                            name: files[i].name,
-                            isDir: files[i].isDir,
-                            size: size
+                            name: files[idx].name,
+                            isDir: files[idx].isDir,
+                            size: String(size)
                         });
+                        it(idx + 1);
                     }
                 });
             }
-            it(idx + 1);
         };
-        callback(files);
+        it(0);
     });
 };
 

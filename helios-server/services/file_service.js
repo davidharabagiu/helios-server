@@ -194,12 +194,18 @@ exports.list = (username, path, callback) => {
             callback(Status.INVALID_PATH);
             return;
         }
-        files.list(username, path, (files) => {
-            if (!files) {
-                callback(Status.UNKNOWN_ERROR);
-            } else {
-                callback(Status.SUCCESS, files);
+        files.isDirectory(username, path, (dir) => {
+            if (!dir) {
+                callback(Status.INVALID_PATH);
+                return;
             }
+            files.list(username, path, (files) => {
+                if (!files) {
+                    callback(Status.UNKNOWN_ERROR);
+                } else {
+                    callback(Status.SUCCESS, files);
+                }
+            });
         });
     });
 };
