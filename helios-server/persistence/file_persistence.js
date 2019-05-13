@@ -7,7 +7,7 @@ var openedFiles = {};
 exports.open = (username, path, readonly, callback) => {
     var cont = (id) => {
         realPath = config.storage.path + '/' + id;
-        fs.open(realPath, readonly ? 'r' : 'a+', (err, fd) => {
+        fs.open(realPath, readonly ? 'r' : 'w+', (err, fd) => {
             if (err) {
                 console.log('file_persistence', err);
                 callback();
