@@ -1,4 +1,9 @@
 {
+    "server": {
+        "port": 8443,
+        "privateKey": "../../localhost.key",
+        "certificate": "../../localhost.crt"
+    },
     "database": {
         "url": "mongodb://localhost:27017/",
         "name": "helios",

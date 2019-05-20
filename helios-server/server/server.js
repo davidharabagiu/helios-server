@@ -2,9 +2,10 @@ var app = require('express')();
 var urls = require('./urls');
 var fs = require('fs');
 var https = require('https');
+var config = require('../utils/config').config;
 
-var privateKey = fs.readFileSync('../../localhost.key', 'utf8');
-var certificate = fs.readFileSync('../../localhost.crt', 'utf8');
+var privateKey = fs.readFileSync(config.server.privateKey, 'utf8');
+var certificate = fs.readFileSync(config.server.certificate, 'utf8');
 var credentials = {
     key: privateKey,
     cert: certificate
@@ -18,7 +19,7 @@ urls.register(app);
 
 var httpsServer = https.createServer(credentials, app);
 
-httpsServer.listen(8443, function() {
+httpsServer.listen(config.server.port, function() {
     var host = httpsServer.address().address;
     var port = httpsServer.address().port;
     console.log(`Listening on ${host}:${port}...`);
