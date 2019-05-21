@@ -9,7 +9,8 @@
         "name": "helios",
         "collections": {
             "users": "users",
-            "files": "files"
+            "files": "files",
+            "notifications": "notifications"
         }
     },
     "usernameRules": {
