@@ -1,5 +1,6 @@
 var user_routes = require('../routes/user_routes');
 var file_routes = require('../routes/file_routes');
+var notification_routes = require('../routes/notification_routes');
 var bodyParser = require('body-parser');
 var multer = require('multer');
 
@@ -29,4 +30,7 @@ exports.register = (app) => {
     app.post('/upload', formData.single('data'), file_routes.upload);
     app.get('/isdir', urlEncodedParser, file_routes.isDir);
     app.post('/share', urlEncodedParser, file_routes.share);
+
+    // Notification routes
+    app.get('/notifications', urlEncodedParser, notification_routes.notifications);
 };

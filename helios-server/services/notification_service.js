@@ -9,8 +9,8 @@ Object.freeze(Status);
 exports.Status = Status;
 
 exports.getNotifications = (username, callback) => {
-    np.getNotifications(username, (success) => {
-        callback(success ? Status.SUCCESS : Status.UNKNOWN_ERROR);
+    np.getNotifications(username, (notifications) => {
+        callback(notifications ? Status.SUCCESS : Status.UNKNOWN_ERROR, notifications);
     });
 };
 
