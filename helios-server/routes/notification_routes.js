@@ -4,6 +4,9 @@ var http_status = require('../utils/http_status');
 
 exports.notifications = function(request, response) {
     var username = authorize(request, response);
+    if (!username) {
+        return;
+    }
     notification_service.getNotifications(username, (status, result) => {
         if (status === notification_service.Status.SUCCESS) {
             response.status(http_status.OK);
@@ -16,6 +19,9 @@ exports.notifications = function(request, response) {
 
 exports.dismiss = function(request, response) {
     var username = authorize(request, response);
+    if (!username) {
+        return;
+    }
     var notificationId = request.body.id;
     if (!notificationId) {
         response.sendStatus(http_status.BAD_REQUEST);
@@ -34,6 +40,9 @@ exports.dismiss = function(request, response) {
 
 exports.dismissAll = function(request, response) {
     var username = authorize(request, response);
+    if (!username) {
+        return;
+    }
     notification_service.dismissAllNotifications(username, (status) => {
         if (status === notification_service.Status.SUCCESS) {
             response.sendStatus(http_status.OK);

@@ -1,4 +1,5 @@
 var np = require('../persistence/notification_persistence');
+var up = require('../persistence/user_persistence');
 
 const Status = {
     SUCCESS: 0,
@@ -32,12 +33,19 @@ exports.dismissNotification = (username, id, callback) => {
             callback(Status.UNKNOWN_ERROR);
             return;
         }
-        if (notification.userId.toHexString() !== id) {
-            callback(Status.UNAUTHORIZED);
-            return;
-        }
-        np.removeNotification(id, (success) => {
-            callback(success ? Status.SUCCESS : Status.UNKNOWN_ERROR);
+        up.findUser(username, (user) => {
+            if (!user) {
+                callback(Status.UNKNOWN_ERROR);
+                return;
+            }
+            if (notification.userId.toHexString() !== user._id.toHexString()) {
+                callback(Status.UNAUTHORIZED);
+                return;
+            }
+            np.removeNotification(id, (success) => {
+                callback(success ? Status.SUCCESS : Status
+                    .UNKNOWN_ERROR);
+            });
         });
     });
 };

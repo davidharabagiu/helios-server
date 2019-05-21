@@ -108,7 +108,9 @@ exports.removeAllNotifications = (username, callback) => {
                 return;
             }
             var userId = res._id;
-            dbo.collection(notificationsCollection).deleteMany({}, (err,
+            dbo.collection(notificationsCollection).deleteMany({
+                userId: userId
+            }, (err,
                 res) => {
                 db.close();
                 if (err) {
