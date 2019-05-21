@@ -1,6 +1,6 @@
 var files = require('../persistence/file_persistence');
 var users = require('../persistence/user_persistence');
-var notification_sender = require('. / notification_sender ');
+var notification_sender = require('./notification_sender');
 var ReadWriteLock = require('rwlock');
 
 const Status = {

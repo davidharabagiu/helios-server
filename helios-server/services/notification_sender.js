@@ -1,4 +1,4 @@
-var np = require('../notification_persistence');
+var np = require('../persistence/notification_persistence');
 
 exports.sendFileShareNotification = (usernameFrom, usernameTo, fileName, fileId, callback) => {
     np.createNotification(usernameTo, `${usernameFrom} sent you ${fileName}`, {

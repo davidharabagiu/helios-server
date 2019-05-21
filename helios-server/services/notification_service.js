@@ -1,9 +1,9 @@
-var np = require('../notification_persistence');
+var np = require('../persistence/notification_persistence');
 
 const Status = {
     SUCCESS: 0,
-    UNAUTHORIZED: 1
-    UNKNOWN_ERROR: 2,
+    UNAUTHORIZED: 1,
+    UNKNOWN_ERROR: 2
 };
 Object.freeze(Status);
 exports.Status = Status;
