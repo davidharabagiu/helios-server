@@ -13,7 +13,7 @@ exports.createNotification = (username, text, data, callback) => {
             username: username
         }, (err, res) => {
             if (err) {
-                console.log('notificaiton_persistence', err);
+                console.log('notification_persistence', err);
                 callback(false);
                 return;
             }
@@ -25,7 +25,7 @@ exports.createNotification = (username, text, data, callback) => {
             }, (err, res) => {
                 db.close();
                 if (err) {
-                    console.log('notificaiton_persistence', err);
+                    console.log('notification_persistence', err);
                     callback(false);
                     return;
                 }
@@ -42,7 +42,7 @@ exports.getNotifications = (username, callback) => {
             username: username
         }, (err, res) => {
             if (err) {
-                console.log('notificaiton_persistence', err);
+                console.log('notification_persistence', err);
                 callback();
                 return;
             }
@@ -54,7 +54,7 @@ exports.getNotifications = (username, callback) => {
             }).toArray((err, res) => {
                 db.close();
                 if (err) {
-                    console.log('notificaiton_persistence', err);
+                    console.log('notification_persistence', err);
                 }
                 callback(res);
             });
@@ -70,7 +70,7 @@ exports.removeNotification = (id, callback) => {
         }, (err, res) => {
             db.close();
             if (err) {
-                console.log('notificaiton_persistence', err);
+                console.log('notification_persistence', err);
                 callback(false);
             } else {
                 callback(true);
