@@ -283,6 +283,20 @@ exports.shareFile = (username, usernameTo, path, callback) => {
     });
 };
 
+exports.shareKey = (username, usernameTo, keyName, keyContent, callback) => {
+    users.findUser(usernameTo, (userTo) => {
+        if (!userTo) {
+            callback(Status.INVALID_USER);
+            return;
+        }
+        notification_sender.sendKeyShareNotification(username, usernameTo,
+            keyName, keyContent, (success) => {
+                callback(success ? Status.SUCCESS : Status
+                    .UNKNOWN_ERROR);
+            });
+    });
+};
+
 function createTransferId(path) {
     var transferId;
     do {

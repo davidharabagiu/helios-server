@@ -314,6 +314,31 @@ exports.share = (request, response) => {
     });
 };
 
+exports.shareKey = (request, response) => {
+    var username = authorize(request, response);
+    if (!username) {
+        response.sendStatus(http_status.UNAUTHORIZED);
+        return;
+    }
+    var usernameTo = request.body.to;
+    var keyName = request.body.name;
+    var keyContent = request.body.content;
+    if (!usernameTo || !keyName || !keyContent) {
+        response.sendStatus(http_status.BAD_REQUEST);
+        return;
+    }
+    file_service.shareKey(username, usernameTo, keyName, keyContent, (status) => {
+        if (status === file_service.Status.SUCCESS) {
+            response.sendStatus(http_status.OK);
+        } else if (status === file_service.Status.INVALID_USER) {
+            response.status(http_status.BAD_REQUEST);
+            response.send('Invalid user');
+        } else {
+            response.sendStatus(http_status.INTERNAL_SERVER_ERROR);
+        }
+    });
+};
+
 function authorize(request, response) {
     token = request.get('token');
     if (!token) {

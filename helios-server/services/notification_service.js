@@ -21,6 +21,11 @@ exports.getNotifications = (username, callback) => {
                 'id': notifications[i]._id,
                 'text': notifications[i].text
             };
+            if (notifications[i].data.fileId) {
+                r['type'] = 'fileshare';
+            } else if (notifications[i].data.keyName) {
+                r['type'] = 'keyshare';
+            }
             result.push(r);
         }
         callback(Status.SUCCESS, result);

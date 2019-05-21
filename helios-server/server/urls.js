@@ -30,6 +30,7 @@ exports.register = (app) => {
     app.post('/upload', formData.single('data'), file_routes.upload);
     app.get('/isdir', urlEncodedParser, file_routes.isDir);
     app.post('/share', urlEncodedParser, file_routes.share);
+    app.post('/sharekey', urlEncodedParser, file_routes.shareKey);
 
     // Notification routes
     app.get('/notifications', urlEncodedParser, notification_routes.notifications);
