@@ -33,4 +33,6 @@ exports.register = (app) => {
 
     // Notification routes
     app.get('/notifications', urlEncodedParser, notification_routes.notifications);
+    app.post('/dismissnotification', urlEncodedParser, notification_routes.dismiss);
+    app.post('/dismissallnotifications', urlEncodedParser, notification_routes.dismissAll);
 };

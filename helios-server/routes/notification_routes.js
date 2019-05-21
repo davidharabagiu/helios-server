@@ -14,6 +14,35 @@ exports.notifications = function(request, response) {
     });
 };
 
+exports.dismiss = function(request, response) {
+    var username = authorize(request, response);
+    var notificationId = request.body.id;
+    if (!notificationId) {
+        response.sendStatus(http_status.BAD_REQUEST);
+        return;
+    }
+    notification_service.dismissNotification(username, notificationId, (status) => {
+        if (status === notification_service.Status.SUCCESS) {
+            response.sendStatus(http_status.OK);
+        } else if (status === notification_service.Status.UNAUTHORIZED) {
+            response.sendStatus(http_status.UNAUTHORIZED);
+        } else {
+            response.sendStatus(http_status.INTERNAL_SERVER_ERROR);
+        }
+    });
+};
+
+exports.dismissAll = function(request, response) {
+    var username = authorize(request, response);
+    notification_service.dismissAllNotifications(username, (status) => {
+        if (status === notification_service.Status.SUCCESS) {
+            response.sendStatus(http_status.OK);
+        } else {
+            response.sendStatus(http_status.INTERNAL_SERVER_ERROR);
+        }
+    });
+};
+
 function authorize(request, response) {
     token = request.get('token');
     if (!token) {
