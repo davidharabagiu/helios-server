@@ -215,6 +215,12 @@ exports.fileExists = (username, path, callback) => {
     });
 };
 
+exports.getFileId = (username, path, callback) => {
+    metadata.getFileId(username, path, (id) => {
+        callback(id);
+    });
+};
+
 exports.getSize = (username, path, callback) => {
     metadata.getStorageId(username, path, (id) => {
         if (!id) {

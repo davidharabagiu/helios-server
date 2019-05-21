@@ -28,4 +28,5 @@ exports.register = (app) => {
     app.get('/download', urlEncodedParser, file_routes.download);
     app.post('/upload', formData.single('data'), file_routes.upload);
     app.get('/isdir', urlEncodedParser, file_routes.isDir);
+    app.post('/share', urlEncodedParser, file_routes.share);
 };

@@ -1,4 +1,6 @@
 var files = require('../persistence/file_persistence');
+var users = require('../persistence/user_persistence');
+var notification_sender = require('. / notification_sender ');
 var ReadWriteLock = require('rwlock');
 
 const Status = {
@@ -8,7 +10,8 @@ const Status = {
     UNKNOWN_ERROR: 3,
     INVALID_TRANSFER_ID: 4,
     UNAUTHORIZED: 5,
-    IO_ERROR: 6
+    IO_ERROR: 6,
+    INVALID_USER: 7
 };
 Object.freeze(Status);
 exports.Status = Status;
@@ -250,6 +253,33 @@ exports.isDir = (username, path, callback) => {
         } else {
             callback(Status.SUCCESS, dir);
         }
+    });
+};
+
+exports.shareFile = (username, usernameTo, path, callback) => {
+    files.getFileId(username, path, (fileId) => {
+        if (!fileId) {
+            callback(Status.INVALID_PATH);
+            return;
+        }
+        users.findUser(usernameTo, (userTo) => {
+            if (!userTo) {
+                callback(Status.INVALID_USER);
+                return;
+            }
+            var separator = path.lastIndexOf('/');
+            var fileName = '';
+            if (separator === -1) {
+                fileName = path;
+            } else {
+                fileName = path.substring(separator + 1, path.length);
+            }
+            notification_sender.sendFileShareNotification(username, usernameTo,
+                fileName, fileId, (success) => {
+                    callback(success ? Status.SUCCESS : Status
+                        .UNKNOWN_ERROR);
+                });
+        });
     });
 };
 

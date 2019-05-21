@@ -287,6 +287,33 @@ exports.isDir = (request, response) => {
     });
 };
 
+exports.share = (request, response) => {
+    var username = authorize(request, response);
+    if (!username) {
+        response.sendStatus(http_status.UNAUTHORIZED);
+        return;
+    }
+    var usernameTo = request.body.to;
+    var path = request.body.path;
+    if (!usernameTo || (!path && path !== '')) {
+        response.sendStatus(http_status.BAD_REQUEST);
+        return;
+    }
+    file_service.shareFile(username, usernameTo, path, (status) => {
+        if (status === file_service.Status.SUCCESS) {
+            response.sendStatus(http_status.OK);
+        } else if (status === file_service.Status.INVALID_PATH) {
+            response.status(http_status.BAD_REQUEST);
+            response.send('Invalid path');
+        } else if (status === file_service.Status.INVALID_USER) {
+            response.status(http_status.BAD_REQUEST);
+            response.send('Invalid user');
+        } else {
+            response.sendStatus(http_status.INTERNAL_SERVER_ERROR);
+        }
+    });
+};
+
 function authorize(request, response) {
     token = request.get('token');
     if (!token) {
