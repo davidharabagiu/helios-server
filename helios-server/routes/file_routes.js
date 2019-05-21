@@ -339,6 +339,31 @@ exports.shareKey = (request, response) => {
     });
 };
 
+exports.getSharedKey = (request, response) => {
+    var username = authorize(request, response);
+    if (!username) {
+        return;
+    }
+    var notificationId = request.query.notification;
+    if (!notificationId) {
+        response.sendStatus(http_status.BAD_REQUEST);
+        return;
+    }
+    file_service.getSharedKey(username, notificationId, (status, key) => {
+        if (status === file_service.Status.SUCCESS) {
+            response.status(http_status.OK);
+            response.send(key);
+        } else if (status === file_service.Status.UNAUTHORIZED) {
+            response.sendStatus(http_status.UNAUTHORIZED);
+        } else if (status === file_service.Status.INVALID_NOTIFICATION_TYPE) {
+            response.status(http_status.BAD_REQUEST);
+            response.send('Invalid notification type');
+        } else {
+            response.sendStatus(http_status.INTERNAL_SERVER_ERROR);
+        }
+    });
+};
+
 function authorize(request, response) {
     token = request.get('token');
     if (!token) {

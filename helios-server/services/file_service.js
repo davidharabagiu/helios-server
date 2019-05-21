@@ -1,6 +1,7 @@
 var files = require('../persistence/file_persistence');
 var users = require('../persistence/user_persistence');
 var notification_sender = require('./notification_sender');
+var notifications = require('../persistence/notification_persistence');
 var ReadWriteLock = require('rwlock');
 
 const Status = {
@@ -11,7 +12,8 @@ const Status = {
     INVALID_TRANSFER_ID: 4,
     UNAUTHORIZED: 5,
     IO_ERROR: 6,
-    INVALID_USER: 7
+    INVALID_USER: 7,
+    INVALID_NOTIFICATION_TYPE: 8
 };
 Object.freeze(Status);
 exports.Status = Status;
@@ -294,6 +296,27 @@ exports.shareKey = (username, usernameTo, keyName, keyContent, callback) => {
                 callback(success ? Status.SUCCESS : Status
                     .UNKNOWN_ERROR);
             });
+    });
+};
+
+exports.getSharedKey = (username, notificationId, callback) => {
+    users.findUser(username, (user) => {
+        if (!user) {
+            callback(Status.UNKNOWN_ERROR);
+            return;
+        }
+        notifications.getNotification(notificationId, (notification) => {
+            if (notification.userId.toHexString() !== user._id.toHexString()) {
+                callback(Status.UNAUTHORIZED);
+            } else if (!notification.data.keyName) {
+                callback(Status.INVALID_NOTIFICATION_TYPE);
+            } else {
+                callback(Status.SUCCESS, {
+                    name: notification.data.keyName,
+                    content: notification.data.keyContent
+                });
+            }
+        });
     });
 };
 

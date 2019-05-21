@@ -31,6 +31,7 @@ exports.register = (app) => {
     app.get('/isdir', urlEncodedParser, file_routes.isDir);
     app.post('/share', urlEncodedParser, file_routes.share);
     app.post('/sharekey', urlEncodedParser, file_routes.shareKey);
+    app.get('/getsharedkey', urlEncodedParser, file_routes.getSharedKey);
 
     // Notification routes
     app.get('/notifications', urlEncodedParser, notification_routes.notifications);
