@@ -62,6 +62,23 @@ exports.getNotifications = (username, callback) => {
     });
 };
 
+exports.getNotification = (id, callback) => {
+    db_access.connect((db) => {
+        dbo = db.db(dbName);
+        dbo.collection(notificationsCollection).findOne({
+            _id: ObjectID(id)
+        }, (err, res) => {
+            db.close();
+            if (err) {
+                console.log('notification_persistence', err);
+                callback();
+            } else {
+                callback(res);
+            }
+        });
+    });
+};
+
 exports.removeNotification = (id, callback) => {
     db_access.connect((db) => {
         dbo = db.db(dbName);
@@ -75,6 +92,32 @@ exports.removeNotification = (id, callback) => {
             } else {
                 callback(true);
             }
+        });
+    });
+};
+
+exports.removeAllNotifications = (username, callback) => {
+    db_access.connect((db) => {
+        dbo = db.db(dbName);
+        dbo.collection(usersCollection).findOne({
+            username: username
+        }, (err, res) => {
+            if (err) {
+                console.log('notification_persistence', err);
+                callback(false);
+                return;
+            }
+            var userId = res._id;
+            dbo.collection(notificationsCollection).deleteMany({}, (err,
+                res) => {
+                db.close();
+                if (err) {
+                    console.log('notification_persistence', err);
+                    callback(false);
+                } else {
+                    callback(true);
+                }
+            });
         });
     });
 };
