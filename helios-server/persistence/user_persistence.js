@@ -42,7 +42,7 @@ exports.findUser = function(username, callback) {
             db.close();
             if (err) {
                 console.log('user_persistence', err);
-                callback(undefined);
+                callback();
             } else {
                 callback(res);
             }

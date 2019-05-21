@@ -1,4 +1,7 @@
 var files = require('../persistence/file_persistence');
+var users = require('../persistence/user_persistence');
+var notification_sender = require('./notification_sender');
+var notifications = require('../persistence/notification_persistence');
 var ReadWriteLock = require('rwlock');
 
 const Status = {
@@ -8,7 +11,9 @@ const Status = {
     UNKNOWN_ERROR: 3,
     INVALID_TRANSFER_ID: 4,
     UNAUTHORIZED: 5,
-    IO_ERROR: 6
+    IO_ERROR: 6,
+    INVALID_USER: 7,
+    INVALID_NOTIFICATION_TYPE: 8
 };
 Object.freeze(Status);
 exports.Status = Status;
@@ -250,6 +255,68 @@ exports.isDir = (username, path, callback) => {
         } else {
             callback(Status.SUCCESS, dir);
         }
+    });
+};
+
+exports.shareFile = (username, usernameTo, path, callback) => {
+    files.getFileId(username, path, (fileId) => {
+        if (!fileId) {
+            callback(Status.INVALID_PATH);
+            return;
+        }
+        users.findUser(usernameTo, (userTo) => {
+            if (!userTo) {
+                callback(Status.INVALID_USER);
+                return;
+            }
+            var separator = path.lastIndexOf('/');
+            var fileName = '';
+            if (separator === -1) {
+                fileName = path;
+            } else {
+                fileName = path.substring(separator + 1, path.length);
+            }
+            notification_sender.sendFileShareNotification(username, usernameTo,
+                fileName, fileId, (success) => {
+                    callback(success ? Status.SUCCESS : Status
+                        .UNKNOWN_ERROR);
+                });
+        });
+    });
+};
+
+exports.shareKey = (username, usernameTo, keyName, keyContent, callback) => {
+    users.findUser(usernameTo, (userTo) => {
+        if (!userTo) {
+            callback(Status.INVALID_USER);
+            return;
+        }
+        notification_sender.sendKeyShareNotification(username, usernameTo,
+            keyName, keyContent, (success) => {
+                callback(success ? Status.SUCCESS : Status
+                    .UNKNOWN_ERROR);
+            });
+    });
+};
+
+exports.getSharedKey = (username, notificationId, callback) => {
+    users.findUser(username, (user) => {
+        if (!user) {
+            callback(Status.UNKNOWN_ERROR);
+            return;
+        }
+        notifications.getNotification(notificationId, (notification) => {
+            if (notification.userId.toHexString() !== user._id.toHexString()) {
+                callback(Status.UNAUTHORIZED);
+            } else if (!notification.data.keyName) {
+                callback(Status.INVALID_NOTIFICATION_TYPE);
+            } else {
+                callback(Status.SUCCESS, {
+                    name: notification.data.keyName,
+                    content: notification.data.keyContent
+                });
+            }
+        });
     });
 };
 

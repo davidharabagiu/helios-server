@@ -287,6 +287,83 @@ exports.isDir = (request, response) => {
     });
 };
 
+exports.share = (request, response) => {
+    var username = authorize(request, response);
+    if (!username) {
+        response.sendStatus(http_status.UNAUTHORIZED);
+        return;
+    }
+    var usernameTo = request.body.to;
+    var path = request.body.path;
+    if (!usernameTo || (!path && path !== '')) {
+        response.sendStatus(http_status.BAD_REQUEST);
+        return;
+    }
+    file_service.shareFile(username, usernameTo, path, (status) => {
+        if (status === file_service.Status.SUCCESS) {
+            response.sendStatus(http_status.OK);
+        } else if (status === file_service.Status.INVALID_PATH) {
+            response.status(http_status.BAD_REQUEST);
+            response.send('Invalid path');
+        } else if (status === file_service.Status.INVALID_USER) {
+            response.status(http_status.BAD_REQUEST);
+            response.send('Invalid user');
+        } else {
+            response.sendStatus(http_status.INTERNAL_SERVER_ERROR);
+        }
+    });
+};
+
+exports.shareKey = (request, response) => {
+    var username = authorize(request, response);
+    if (!username) {
+        response.sendStatus(http_status.UNAUTHORIZED);
+        return;
+    }
+    var usernameTo = request.body.to;
+    var keyName = request.body.name;
+    var keyContent = request.body.content;
+    if (!usernameTo || !keyName || !keyContent) {
+        response.sendStatus(http_status.BAD_REQUEST);
+        return;
+    }
+    file_service.shareKey(username, usernameTo, keyName, keyContent, (status) => {
+        if (status === file_service.Status.SUCCESS) {
+            response.sendStatus(http_status.OK);
+        } else if (status === file_service.Status.INVALID_USER) {
+            response.status(http_status.BAD_REQUEST);
+            response.send('Invalid user');
+        } else {
+            response.sendStatus(http_status.INTERNAL_SERVER_ERROR);
+        }
+    });
+};
+
+exports.getSharedKey = (request, response) => {
+    var username = authorize(request, response);
+    if (!username) {
+        return;
+    }
+    var notificationId = request.query.notification;
+    if (!notificationId) {
+        response.sendStatus(http_status.BAD_REQUEST);
+        return;
+    }
+    file_service.getSharedKey(username, notificationId, (status, key) => {
+        if (status === file_service.Status.SUCCESS) {
+            response.status(http_status.OK);
+            response.send(key);
+        } else if (status === file_service.Status.UNAUTHORIZED) {
+            response.sendStatus(http_status.UNAUTHORIZED);
+        } else if (status === file_service.Status.INVALID_NOTIFICATION_TYPE) {
+            response.status(http_status.BAD_REQUEST);
+            response.send('Invalid notification type');
+        } else {
+            response.sendStatus(http_status.INTERNAL_SERVER_ERROR);
+        }
+    });
+};
+
 function authorize(request, response) {
     token = request.get('token');
     if (!token) {
