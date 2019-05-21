@@ -1,4 +1,5 @@
 var notification_service = require('../services/notification_service');
+var user_service = require('../services/user_service');
 var http_status = require('../utils/http_status');
 
 exports.notifications = function(request, response) {
