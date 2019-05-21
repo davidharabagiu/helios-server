@@ -10,7 +10,19 @@ exports.Status = Status;
 
 exports.getNotifications = (username, callback) => {
     np.getNotifications(username, (notifications) => {
-        callback(notifications ? Status.SUCCESS : Status.UNKNOWN_ERROR, notifications);
+        var result = [];
+        if (!notifications) {
+            callback(Status.UNKNOWN_ERROR);
+            return;
+        }
+        for (var i = 0; i < notifications.length; ++i) {
+            var r = {
+                'id': notifications[i]._id,
+                'text': notifications[i].text
+            };
+            result.push(r);
+        }
+        callback(Status.SUCCESS, result);
     });
 };
 
