@@ -5,8 +5,8 @@ var fs = require('fs');
 var openedFiles = {};
 
 exports.open = (username, path, readonly, callback) => {
-    var cont = (id) => {
-        realPath = config.storage.path + '/' + id;
+    var cont = (location) => {
+        realPath = config.storage.path + '/' + location;
         fs.open(realPath, readonly ? 'r' : 'w+', (err, fd) => {
             if (err) {
                 console.log('file_persistence', err);
@@ -14,22 +14,22 @@ exports.open = (username, path, readonly, callback) => {
                 return;
             }
             openedFiles[fd] = {
-                id: id,
+                location: location,
                 readonly: readonly,
                 username: username
             };
             callback(fd);
         });
     };
-    metadata.getLocation(username, path, (id) => {
-        if (!id) {
+    metadata.getLocation(username, path, (location) => {
+        if (!location) {
             if (readonly) {
                 console.log('file_persistence',
                     `cannot find file ${username}:/${path}`);
                 callback();
                 return;
             }
-            var location = createFileId();
+            location = createFileId();
             metadata.createFile(username, location, path, false, (success) => {
                 if (!success) {
                     console.log('file_persistence',
@@ -37,16 +37,16 @@ exports.open = (username, path, readonly, callback) => {
                     callback();
                     return;
                 }
-                cont(id);
+                cont(location);
             });
         } else {
-            cont(id);
+            cont(location);
         }
     });
 };
 
 exports.close = (username, fd, callback) => {
-    file = openedFiles[fd];
+    var file = openedFiles[fd];
     if (!file) {
         console.log('file_persistence', `invalid file descriptor ${fd}`);
         callback(false);
@@ -210,9 +210,7 @@ exports.createDirectory = (username, path, callback) => {
 };
 
 exports.fileExists = (username, path, callback) => {
-    metadata.getStorageId(username, path, (id) => {
-        callback(id ? true : false);
-    });
+    metadata.fileExists(username, path, callback);
 };
 
 exports.getFileId = (username, path, callback) => {

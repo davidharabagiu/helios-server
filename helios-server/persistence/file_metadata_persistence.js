@@ -35,7 +35,7 @@ exports.createFile = (username, location, path, isDir, callback) => {
             callback(false);
             return;
         }
-        createFileFromPath(rootId, location, path, isDir, [], (success) => {
+        createFileFromPath(rootId, location, path, isDir, [], undefined, (success) => {
             if (!success) {
                 console.log('file_metadata_persistence', `cannot create file ${username}:/${path}`);
             }
@@ -116,15 +116,9 @@ exports.moveFile = (username, srcPath, dstPath, callback) => {
                     isDir = res.isDir;
                     storageId = res.storageId;
                     children = res.children;
-                    deleteFile(parentId, fileId, (success) => {
-                        if (!success) {
-                            console.log(
-                                'file_metadata_persistence', `cannot delete ${username}:/${srcPath}`
-                            );
-                            callback(false);
-                            return;
-                        }
-                        createFileFromPath(rootId, storageId, dstPath, isDir, children, (success) => {
+                    deleteFile(parentId, fileId, true, () => {
+                        createFileFromPath(rootId, undefined, dstPath, isDir, children, storageId, (
+                            success) => {
                             if (!success) {
                                 console.log('file_metadata_persistence',
                                     `cannot create file ${username}:/${dstPath}`
@@ -202,6 +196,25 @@ exports.getFileId = (username, path, callback) => {
     });
 };
 
+exports.fileExists = (username, path, callback) => {
+    findRoot(username, (rootId) => {
+        if (!rootId) {
+            console.log('file_metadata_persistence', `cannot find root folder for user ${username}`);
+            callback(false);
+            return;
+        }
+        findFile(rootId, path, (parentId, childId) => {
+            db_access.connect((db) => {
+                if (!childId) {
+                    callback(false);
+                } else {
+                    callback(true);
+                }
+            });
+        });
+    });
+};
+
 exports.isDirectory = (username, path, callback) => {
     findRoot(username, (rootId) => {
         if (!rootId) {
@@ -261,7 +274,7 @@ function listFiles(dirId, callback) {
     });
 }
 
-function createFile(parentId, location, name, isDir, children, callback) {
+function createFile(parentId, location, name, isDir, children, storageId, callback) {
     db_access.connect((db) => {
         dbo = db.db(dbName);
         var newFile = {
@@ -300,6 +313,9 @@ function createFile(parentId, location, name, isDir, children, callback) {
         if (isDir) {
             newFile.children = children;
             cont();
+        } else if (storageId) {
+            newFile.storageId = storageId;
+            cont();
         } else {
             dbo.collection(storagesCollection).insertOne({
                 location: location,
@@ -317,10 +333,10 @@ function createFile(parentId, location, name, isDir, children, callback) {
     });
 }
 
-function createFileFromPath(rootId, location, path, isDir, children, callback) {
+function createFileFromPath(rootId, location, path, isDir, children, storageId, callback) {
     var separator = path.lastIndexOf('/');
     if (separator === -1) {
-        createFile(rootId, location, path, isDir, children, (success) => {
+        createFile(rootId, location, path, isDir, children, storageId, (success) => {
             if (!success) {
                 console.log('file_metadata_persistence', `cannot create file ${rootId}:/${path}`);
             }
@@ -346,7 +362,7 @@ function createFileFromPath(rootId, location, path, isDir, children, callback) {
                         callback(false);
                         return;
                     }
-                    createFile(dirId, location, fileName, isDir, children,
+                    createFile(dirId, location, fileName, isDir, children, storageId,
                         function(success) {
                             if (!success) {
                                 console.log('file_metadata_persistence', `cannot create file ${rootId}:/${path}`);
@@ -379,7 +395,7 @@ function deleteFileOrDirectory(parentId, id, callback) {
                             return;
                         }
                         if (res.name !== '') {
-                            deleteFile(parentId, id, (location) => {
+                            deleteFile(parentId, id, false, (location) => {
                                 callback(locations);
                             });
                         } else {
@@ -388,7 +404,7 @@ function deleteFileOrDirectory(parentId, id, callback) {
                         }
                     });
                 } else {
-                    deleteFile(parentId, id, (location) => {
+                    deleteFile(parentId, id, false, (location) => {
                         callback(location ? [location] : []);
                     });
                 }
@@ -397,7 +413,7 @@ function deleteFileOrDirectory(parentId, id, callback) {
     });
 }
 
-function deleteFile(parentId, id, callback) {
+function deleteFile(parentId, id, skipStorageModifications, callback) {
     db_access.connect((db) => {
         dbo = db.db(dbName);
         dbo.collection(filesCollection).findOne({
@@ -413,7 +429,7 @@ function deleteFile(parentId, id, callback) {
                 callback();
                 return;
             }
-            var storageId = res.isDir ? 'dir' : res.storageId;
+            var storageId = res.isDir ? undefined : res.storageId;
             dbo.collection(filesCollection).deleteOne({
                 _id: id
             }, {}, (err, res) => {
@@ -449,12 +465,12 @@ function deleteFile(parentId, id, callback) {
                             callback();
                             return;
                         }
-                        if (storageId === 'dir') {
+                        if (!storageId || skipStorageModifications) {
                             db.close();
                             callback();
                             return;
                         }
-                        db.collection(storagesCollection).findOne({
+                        dbo.collection(storagesCollection).findOne({
                             _id: storageId
                         }, (err, res) => {
                             if (err) {
@@ -472,7 +488,7 @@ function deleteFile(parentId, id, callback) {
                             }
                             var location = res.location;
                             if (res.refcount > 1) {
-                                db.collection(storagesCollection).updateOne({
+                                dbo.collection(storagesCollection).updateOne({
                                     _id: storageId
                                 }, {
                                     $inc: {
@@ -488,7 +504,7 @@ function deleteFile(parentId, id, callback) {
                                     callback();
                                 });
                             } else {
-                                db.collection(storagesCollection).deleteOne({
+                                dbo.collection(storagesCollection).deleteOne({
                                     _id: storageId
                                 }, (err, res) => {
                                     if (err) {
@@ -531,14 +547,7 @@ function emptyDirectory(dirId, callback) {
                     return;
                 }
                 deleteFileOrDirectory(dirId, res.children[i].childId, (locations) => {
-                    if (!locations) {
-                        console.log('file_metadata_persistence', `cannot delete file ${res.children[i].childId}`);
-                        callback();
-                        return;
-                    }
-                    if (locations !== 'dir') {
-                        storageLocations = storageLocations.concat(locations);
-                    }
+                    storageLocations = storageLocations.concat(locations);
                     it(i + 1);
                 });
             }
