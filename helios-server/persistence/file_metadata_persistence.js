@@ -5,6 +5,7 @@ var ObjectID = require('mongodb').ObjectID;
 const dbName = config.database.name;
 const usersCollection = config.database.collections.users;
 const filesCollection = config.database.collections.files;
+const storagesCollection = config.database.collections.storages;
 
 exports.createRoot = (callback) => {
     db_access.connect((db) => {
@@ -12,8 +13,7 @@ exports.createRoot = (callback) => {
         newFile = {
             name: '',
             isDir: true,
-            children: [],
-            storageId: 'dir'
+            children: []
         };
         dbo.collection(filesCollection).insertOne(newFile, (err, res) => {
             db.close();
@@ -27,7 +27,7 @@ exports.createRoot = (callback) => {
     });
 };
 
-exports.createFile = (username, storageId, path, isDir, callback) => {
+exports.createFile = (username, location, path, isDir, callback) => {
     findRoot(username, (rootId) => {
         if (!rootId) {
             console.log('file_metadata_persistence',
@@ -35,10 +35,9 @@ exports.createFile = (username, storageId, path, isDir, callback) => {
             callback(false);
             return;
         }
-        createFileFromPath(rootId, storageId, path, isDir, [], (success) => {
+        createFileFromPath(rootId, location, path, isDir, [], (success) => {
             if (!success) {
-                console.log('file_metadata_persistence',
-                    `cannot create file ${username}:/${path}`);
+                console.log('file_metadata_persistence', `cannot create file ${username}:/${path}`);
             }
             callback(success);
         });
@@ -48,20 +47,18 @@ exports.createFile = (username, storageId, path, isDir, callback) => {
 exports.deleteFile = (username, path, callback) => {
     findRoot(username, (rootId) => {
         if (!rootId) {
-            console.log('file_metadata_persistence',
-                `cannot find root folder for user ${username}`);
+            console.log('file_metadata_persistence', `cannot find root folder for user ${username}`);
             callback();
             return;
         }
         findFile(rootId, path, (parentId, fileId) => {
             if (!fileId) {
-                console.log('file_metadata_persistence',
-                    `cannot find file ${username}:/${path}`);
+                console.log('file_metadata_persistence', `cannot find file ${username}:/${path}`);
                 callback();
                 return;
             }
-            deleteFileOrDirectory(parentId, fileId, (storageIds) => {
-                callback(storageIds);
+            deleteFileOrDirectory(parentId, fileId, (locations) => {
+                callback(locations);
             });
         });
     });
@@ -70,15 +67,13 @@ exports.deleteFile = (username, path, callback) => {
 exports.listFiles = (username, path, callback) => {
     findRoot(username, (rootId) => {
         if (!rootId) {
-            console.log('file_metadata_persistence',
-                `cannot find root folder for user ${username}`);
+            console.log('file_metadata_persistence', `cannot find root folder for user ${username}`);
             callback();
             return;
         }
         findFile(rootId, path, (parentId, fileId) => {
             if (!fileId) {
-                console.log('file_metadata_persistence',
-                    `cannot find file ${username}:/${path}`);
+                console.log('file_metadata_persistence', `cannot find file ${username}:/${path}`);
                 callback();
                 return;
             }
@@ -92,21 +87,18 @@ exports.listFiles = (username, path, callback) => {
 exports.moveFile = (username, srcPath, dstPath, callback) => {
     findRoot(username, (rootId) => {
         if (!rootId) {
-            console.log('file_metadata_persistence',
-                `cannot find root folder for user ${username}`);
+            console.log('file_metadata_persistence', `cannot find root folder for user ${username}`);
             callback(false);
             return;
         }
         findFile(rootId, srcPath, (parentId, fileId) => {
             if (!fileId) {
-                console.log('file_metadata_persistence',
-                    `cannot find file ${username}:/${path}`);
+                console.log('file_metadata_persistence', `cannot find file ${username}:/${path}`);
                 callback(false);
                 return;
             }
             if (!parentId) {
-                console.log('file_metadata_persistence',
-                    `cannot move ${username}:/${srcPath}`);
+                console.log('file_metadata_persistence', `cannot move ${username}:/${srcPath}`);
                 callback(false);
                 return;
             }
@@ -117,8 +109,7 @@ exports.moveFile = (username, srcPath, dstPath, callback) => {
                 }, {}, (err, res) => {
                     db.close();
                     if (err) {
-                        console.log('file_metadata_persistence',
-                            err);
+                        console.log('file_metadata_persistence', err);
                         callback(false);
                         return;
                     }
@@ -128,24 +119,19 @@ exports.moveFile = (username, srcPath, dstPath, callback) => {
                     deleteFile(parentId, fileId, (success) => {
                         if (!success) {
                             console.log(
-                                'file_metadata_persistence',
-                                `cannot delete ${username}:/${srcPath}`
+                                'file_metadata_persistence', `cannot delete ${username}:/${srcPath}`
                             );
                             callback(false);
                             return;
                         }
-                        createFileFromPath(rootId,
-                            storageId, dstPath,
-                            isDir, children, (
-                                success) => {
-                                if (!success) {
-                                    console.log(
-                                        'file_metadata_persistence',
-                                        `cannot create file ${username}:/${dstPath}`
-                                    );
-                                }
-                                callback(success);
-                            });
+                        createFileFromPath(rootId, storageId, dstPath, isDir, children, (success) => {
+                            if (!success) {
+                                console.log('file_metadata_persistence',
+                                    `cannot create file ${username}:/${dstPath}`
+                                );
+                            }
+                            callback(success);
+                        });
                     });
                 });
             });
@@ -153,11 +139,10 @@ exports.moveFile = (username, srcPath, dstPath, callback) => {
     });
 };
 
-exports.getStorageId = (username, path, callback) => {
+exports.getLocation = (username, path, callback) => {
     findRoot(username, (rootId) => {
         if (!rootId) {
-            console.log('file_metadata_persistence',
-                `cannot find root folder for user ${username}`);
+            console.log('file_metadata_persistence', `cannot find root folder for user ${username}`);
             callback();
             return;
         }
@@ -167,10 +152,8 @@ exports.getStorageId = (username, path, callback) => {
                 dbo.collection(filesCollection).findOne({
                     _id: childId
                 }, (err, res) => {
-                    db.close();
                     if (err) {
-                        console.log('file_metadata_persistence',
-                            err);
+                        console.log('file_metadata_persistence', err);
                         callback();
                         return;
                     }
@@ -178,7 +161,21 @@ exports.getStorageId = (username, path, callback) => {
                         callback();
                         return;
                     }
-                    callback(res.storageId);
+                    dbo.collection(storagesCollection).findOne({
+                        _id: res.storageId
+                    }, (err, res) => {
+                        db.close();
+                        if (err) {
+                            console.log('file_metadata_persistence', err);
+                            callback();
+                            return;
+                        }
+                        if (!res) {
+                            callback();
+                            return;
+                        }
+                        callback(res.location);
+                    });
                 });
             });
         });
@@ -188,17 +185,14 @@ exports.getStorageId = (username, path, callback) => {
 exports.getFileId = (username, path, callback) => {
     findRoot(username, (rootId) => {
         if (!rootId) {
-            console.log('file_metadata_persistence',
-                `cannot find root folder for user ${username}`);
+            console.log('file_metadata_persistence', `cannot find root folder for user ${username}`);
             callback();
             return;
         }
         findFile(rootId, path, (parentId, childId) => {
             db_access.connect((db) => {
                 if (!childId) {
-                    console.log('file_metadata_persistence',
-                        `cannot find file ${username}:${path}`
-                    );
+                    console.log('file_metadata_persistence', `cannot find file ${username}:${path}`);
                     callback();
                     return;
                 }
@@ -211,8 +205,7 @@ exports.getFileId = (username, path, callback) => {
 exports.isDirectory = (username, path, callback) => {
     findRoot(username, (rootId) => {
         if (!rootId) {
-            console.log('file_metadata_persistence',
-                `cannot find root folder for user ${username}`);
+            console.log('file_metadata_persistence', `cannot find root folder for user ${username}`);
             callback();
             return;
         }
@@ -224,8 +217,7 @@ exports.isDirectory = (username, path, callback) => {
                 }, (err, res) => {
                     db.close();
                     if (err) {
-                        console.log('file_metadata_persistence',
-                            err);
+                        console.log('file_metadata_persistence', err);
                         callback();
                         return;
                     }
@@ -253,8 +245,7 @@ function listFiles(dirId, callback) {
                 return;
             }
             if (!res.isDir) {
-                console.log('file_metadata_persistence',
-                    `${dirId} is not a directory`);
+                console.log('file_metadata_persistence', `${dirId} is not a directory`);
                 callback();
                 return;
             }
@@ -270,56 +261,68 @@ function listFiles(dirId, callback) {
     });
 }
 
-function createFile(parentId, storageId, name, isDir, children, callback) {
+function createFile(parentId, location, name, isDir, children, callback) {
     db_access.connect((db) => {
         dbo = db.db(dbName);
-        newFile = {
+        var newFile = {
             name: name,
             isDir: isDir
         };
-        if (isDir) {
-            newFile.children = children;
-            newFile.storageId = 'dir';
-        } else {
-            newFile.storageId = storageId;
-        }
-        dbo.collection(filesCollection).insertOne(newFile, (err, res) => {
-            if (err) {
-                console.log('file_metadata_persistence', err);
-                callback(false);
-                return;
-            }
-            var newChild = {
-                childId: res.insertedId,
-                name: name,
-                isDir: isDir
-            };
-            dbo.collection(filesCollection).updateOne({
-                _id: ObjectID(parentId)
-            }, {
-                $push: {
-                    children: newChild
-                }
-            }, {}, (err, res) => {
-                db.close();
+        var cont = () => {
+            dbo.collection(filesCollection).insertOne(newFile, (err, res) => {
                 if (err) {
                     console.log('file_metadata_persistence', err);
                     callback(false);
                     return;
                 }
-                callback(true);
+                var newChild = {
+                    childId: res.insertedId,
+                    name: name,
+                    isDir: isDir
+                };
+                dbo.collection(filesCollection).updateOne({
+                    _id: ObjectID(parentId)
+                }, {
+                    $push: {
+                        children: newChild
+                    }
+                }, {}, (err, res) => {
+                    db.close();
+                    if (err) {
+                        console.log('file_metadata_persistence', err);
+                        callback(false);
+                        return;
+                    }
+                    callback(true);
+                });
             });
-        });
+        };
+        if (isDir) {
+            newFile.children = children;
+            cont();
+        } else {
+            dbo.collection(storagesCollection).insertOne({
+                location: location,
+                refcount: 1
+            }, (err, res) => {
+                if (err) {
+                    console.log('file_metadata_persistence', err);
+                    callback(false);
+                    return;
+                }
+                newFile.storageId = res.insertedId;
+                cont();
+            });
+        }
     });
 }
 
-function createFileFromPath(rootId, storageId, path, isDir, children, callback) {
+function createFileFromPath(rootId, location, path, isDir, children, callback) {
     var separator = path.lastIndexOf('/');
     if (separator === -1) {
-        createFile(rootId, storageId, path, isDir, children, (success) => {
+        createFile(rootId, location, path, isDir, children, (success) => {
             if (!success) {
-                console.log('file_metadata_persistence',
-                    `cannot create file ${rootId}:/${path}`);
+                console.log('file_metadata_persistence', `cannot create file ${rootId}:/${path}`);
             }
             callback(success);
         });
@@ -328,8 +331,7 @@ function createFileFromPath(rootId, storageId, path, isDir, children, callback) 
         var fileName = path.substring(separator + 1, path.length);
         findFile(rootId, dirName, function(parentId, dirId) {
             if (!dirId) {
-                console.log('file_metadata_persistence',
-                    `cannot find file ${rootId}:/${path}`);
+                console.log('file_metadata_persistence', `cannot find file ${rootId}:/${path}`);
                 callback(false);
                 return;
             }
@@ -340,17 +342,14 @@ function createFileFromPath(rootId, storageId, path, isDir, children, callback) 
                 }, {}, (err, res) => {
                     db.close();
                     if (!res.isDir) {
-                        console.log('file_metadata_persistence',
-                            `${rootId}:/${dirId} is not a directory`);
+                        console.log('file_metadata_persistence', `${rootId}:/${dirId} is not a directory`);
                         callback(false);
                         return;
                     }
-                    createFile(dirId, storageId, fileName, isDir, children,
+                    createFile(dirId, location, fileName, isDir, children,
                         function(success) {
                             if (!success) {
-                                console.log('file_metadata_persistence',
-                                    `cannot create file ${rootId}:/${path}`
-                                );
+                                console.log('file_metadata_persistence', `cannot create file ${rootId}:/${path}`);
                             }
                             callback(success);
                         });
@@ -373,40 +372,24 @@ function deleteFileOrDirectory(parentId, id, callback) {
                 return;
             } else {
                 if (res.isDir) {
-                    emptyDirectory(id, (storageIds) => {
-                        if (!storageIds && storageIds !== []) {
-                            console.log('file_metadata_persistence',
-                                `cannot empty directory ${id}`);
+                    emptyDirectory(id, (locations) => {
+                        if (!locations && locations !== []) {
+                            console.log('file_metadata_persistence', `cannot empty directory ${id}`);
                             callback();
                             return;
                         }
                         if (res.name !== '') {
-                            deleteFile(parentId, id, (storageId) => {
-                                if (!storageId) {
-                                    console.log(
-                                        'file_metadata_persistence',
-                                        `cannot delete file ${id}`
-                                    );
-                                    callback();
-                                    return;
-                                }
-                                callback(storageIds);
+                            deleteFile(parentId, id, (location) => {
+                                callback(locations);
                             });
                         } else {
-                            console.log('file_metadata_persistence',
-                                `cannot delete root ${id}`);
-                            callback(storageIds);
+                            console.log('file_metadata_persistence', `cannot delete root ${id}`);
+                            callback(locations);
                         }
                     });
                 } else {
-                    deleteFile(parentId, id, (storageId) => {
-                        if (!storageId) {
-                            console.log('file_metadata_persistence',
-                                `cannot delete file ${id}`);
-                            callback();
-                            return;
-                        }
-                        callback(storageId === 'dir' ? [] : [storageId]);
+                    deleteFile(parentId, id, (location) => {
+                        callback(location ? [location] : []);
                     });
                 }
             }
@@ -443,14 +426,12 @@ function deleteFile(parentId, id, callback) {
                     _id: parentId
                 }, (err, res) => {
                     if (err) {
-                        console.log('file_metadata_persistence',
-                            err);
+                        console.log('file_metadata_persistence', err);
                         callback();
                         return;
                     }
                     if (!res) {
-                        console.log('file_metadata_persistence',
-                            `cannot find file ${parentId}`);
+                        console.log('file_metadata_persistence', `cannot find file ${parentId}`);
                         callback();
                         return;
                     }
@@ -463,15 +444,62 @@ function deleteFile(parentId, id, callback) {
                             }
                         }
                     }, {}, (err, res) => {
-                        db.close();
                         if (err) {
-                            console.log(
-                                'file_metadata_persistence',
-                                err);
+                            console.log('file_metadata_persistence', err);
                             callback();
                             return;
                         }
-                        callback(storageId);
+                        if (storageId === 'dir') {
+                            db.close();
+                            callback();
+                            return;
+                        }
+                        db.collection(storagesCollection).findOne({
+                            _id: storageId
+                        }, (err, res) => {
+                            if (err) {
+                                db.close();
+                                console.log('file_metadata_persistence', err);
+                                callback();
+                                return;
+                            }
+                            if (!res) {
+                                db.close();
+                                console.log('file_metadata_persistence',
+                                    `could not find storage with id ${storageId}`);
+                                callback();
+                                return;
+                            }
+                            var location = res.location;
+                            if (res.refcount > 1) {
+                                db.collection(storagesCollection).updateOne({
+                                    _id: storageId
+                                }, {
+                                    $inc: {
+                                        refcount: -1
+                                    }
+                                }, (err, res) => {
+                                    db.close();
+                                    if (err) {
+                                        console.log('file_metadata_persistence',
+                                            `could not update storage with id ${storageId}`
+                                        );
+                                    }
+                                    callback();
+                                });
+                            } else {
+                                db.collection(storagesCollection).deleteOne({
+                                    _id: storageId
+                                }, (err, res) => {
+                                    if (err) {
+                                        console.log('file_metadata_persistence',
+                                            `could not remove storage with id ${storageId}`
+                                        );
+                                    }
+                                    callback(location);
+                                });
+                            }
+                        });
                     });
                 });
             });
@@ -492,27 +520,24 @@ function emptyDirectory(dirId, callback) {
                 return;
             }
             if (!res.isDir) {
-                console.log('file_metadata_persistence',
-                    `${dirId} is not a directory`);
+                console.log('file_metadata_persistence', `${dirId} is not a directory`);
                 callback();
                 return;
             }
-            var storageIds = [];
+            var storageLocations = [];
             var it = (i) => {
                 if (i === res.children.length) {
-                    callback(storageIds);
+                    callback(storageLocations);
                     return;
                 }
-                deleteFileOrDirectory(dirId, res.children[i].childId, (ids) => {
-                    if (!ids) {
-                        console.log('file_metadata_persistence',
-                            `cannot delete file ${res.children[i].childId}`
-                        );
+                deleteFileOrDirectory(dirId, res.children[i].childId, (locations) => {
+                    if (!locations) {
+                        console.log('file_metadata_persistence', `cannot delete file ${res.children[i].childId}`);
                         callback();
                         return;
                     }
-                    if (ids !== 'dir') {
-                        storageIds = storageIds.concat(ids);
+                    if (locations !== 'dir') {
+                        storageLocations = storageLocations.concat(locations);
                     }
                     it(i + 1);
                 });
@@ -535,8 +560,7 @@ function findRoot(username, callback) {
                 return;
             }
             if (!res) {
-                console.log('file_metadata_persistence',
-                    `cannot find user ${user}`);
+                console.log('file_metadata_persistence', `cannot find user ${user}`);
                 callback();
                 return;
             }
@@ -568,14 +592,12 @@ function findFile(parentId, path, callback) {
                 return;
             }
             if (!res) {
-                console.log('file_metadata_persistence',
-                    `cannot find file ${parentId}:/${path}`);
+                console.log('file_metadata_persistence', `cannot find file ${parentId}:/${path}`);
                 callback();
                 return;
             }
             if (!res.isDir) {
-                console.log('file_metadata_persistence',
-                    `${parentId}:/${path} is not a directory`);
+                console.log('file_metadata_persistence', `${parentId}:/${path} is not a directory`);
                 callback();
                 return;
             }

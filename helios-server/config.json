@@ -10,7 +10,8 @@
         "collections": {
             "users": "users",
             "files": "files",
-            "notifications": "notifications"
+            "notifications": "notifications",
+            "storages": "storages"
         }
     },
     "usernameRules": {

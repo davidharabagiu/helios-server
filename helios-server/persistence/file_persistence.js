@@ -21,7 +21,7 @@ exports.open = (username, path, readonly, callback) => {
             callback(fd);
         });
     };
-    metadata.getStorageId(username, path, (id) => {
+    metadata.getLocation(username, path, (id) => {
         if (!id) {
             if (readonly) {
                 console.log('file_persistence',
@@ -29,8 +29,8 @@ exports.open = (username, path, readonly, callback) => {
                 callback();
                 return;
             }
-            id = createFileId();
-            metadata.createFile(username, id, path, false, (success) => {
+            var location = createFileId();
+            metadata.createFile(username, location, path, false, (success) => {
                 if (!success) {
                     console.log('file_persistence',
                         `cannot create file ${username}:/${path}`);
@@ -126,18 +126,18 @@ exports.read = (username, fd, buffer, offset, length, callback) => {
 };
 
 exports.delete = (username, path, callback) => {
-    metadata.deleteFile(username, path, (ids) => {
-        if (!ids) {
+    metadata.deleteFile(username, path, (locations) => {
+        if (!locations) {
             console.log('file_persistence', `cannot delete ${username}:/${path}`);
             callback(false);
             return;
         }
         var it = (i) => {
-            if (i === ids.length) {
+            if (i === locations.length) {
                 callback(true);
                 return;
             }
-            realPath = config.storage.path + '/' + ids[i];
+            realPath = config.storage.path + '/' + locations[i];
             fs.unlink(realPath, (err) => {
                 if (err) {
                     console.log('file_persistence', err);
@@ -222,18 +222,13 @@ exports.getFileId = (username, path, callback) => {
 };
 
 exports.getSize = (username, path, callback) => {
-    metadata.getStorageId(username, path, (id) => {
-        if (!id) {
+    metadata.getLocation(username, path, (location) => {
+        if (!location) {
             console.log('file_persistence', `cannot find file ${username}:/${path}`);
             callback(-2);
             return;
         }
-        if (id === 'dir') {
-            console.log('file_persistence', `${username}:/${path} is a directory`);
-            callback(-2);
-            return;
-        }
-        realPath = config.storage.path + '/' + id;
+        realPath = config.storage.path + '/' + location;
         fs.stat(realPath, {
             bigint: true
         }, (err, stats) => {
