@@ -337,37 +337,50 @@ exports.acceptSharedFile = (username, notificationId, path, callback) => {
             }
         });
     };
-    notifications.getNotification(notificationId, (notification) => {
-        if (notification.userId.toHexString() !== user._id.toHexString()) {
-            callback(Status.UNAUTHORIZED);
-        } else if (!notification.data.path) {
-            callback(Status.INVALID_NOTIFICATION_TYPE);
-        } else {
-            users.findUser(notification.data.from, (usernameFrom) => {
-                if (!usernameFrom) {
-                    callback(Status.INVALID_USER);
-                    return;
-                }
-                files.fileExists(notification.data.from, notification.data.path, (exists) => {
-                    if (!exists) {
-                        callback(Status.FILE_NO_LONGER_EXISTS);
+    users.findUser(username, (user) => {
+        if (!user) {
+            callback(Status.UNKNOWN_ERROR);
+            return;
+        }
+        notifications.getNotification(notificationId, (notification) => {
+            if (notification.userId.toHexString() !== user._id.toHexString()) {
+                callback(Status.UNAUTHORIZED);
+            } else if (!notification.data.path) {
+                callback(Status.INVALID_NOTIFICATION_TYPE);
+            } else {
+                users.findUser(notification.data.from, (usernameFrom) => {
+                    if (!usernameFrom) {
+                        callback(Status.INVALID_USER);
                         return;
                     }
-                    var separator = path.lastIndexOf('/');
-                    if (separator === -1) {
-                        cont(notification.data.from, notification.data.path, username, path);
-                    } else {
-                        files.isDirectory(username, path.substring(0, separator), (toIsDir) => {
-                            if (!toIsDir) {
-                                callback(Status.INVALID_PATH);
+                    files.fileExists(notification.data.from, notification.data.path, (exists) => {
+                        if (!exists) {
+                            callback(Status.FILE_NO_LONGER_EXISTS);
+                            return;
+                        }
+                        files.fileExists(username, path, (exists) => {
+                            if (exists) {
+                                callback(Status.FILE_ALREADY_EXISTS);
                                 return;
                             }
-                            cont(notification.data.from, notification.data.path, username, path);
+                            var separator = path.lastIndexOf('/');
+                            if (separator === -1) {
+                                cont(notification.data.from, notification.data.path, username, path);
+                            } else {
+                                files.isDirectory(username, path.substring(0, separator), (toIsDir) => {
+                                    if (!toIsDir) {
+                                        callback(Status.INVALID_PATH);
+                                        return;
+                                    }
+                                    cont(notification.data.from, notification.data.path, username,
+                                        path);
+                                });
+                            }
                         });
-                    }
+                    });
                 });
-            });
-        }
+            }
+        });
     });
 };
 

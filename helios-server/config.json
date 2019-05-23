@@ -15,10 +15,10 @@
         }
     },
     "usernameRules": {
-        "minimumLength": 5
+        "minimumLength": 1
     },
     "passwordRules": {
-        "minimumLength": 6,
+        "minimumLength": 1,
         "mustContainLowercase": false,
         "mustContainUppercase": false,
         "mustContainDigit": false,

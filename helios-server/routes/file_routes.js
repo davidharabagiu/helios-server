@@ -361,6 +361,9 @@ exports.acceptFile = (request, response) => {
         } else if (status === file_service.Status.INVALID_USER || status === file_service.Status.FILE_NO_LONGER_EXISTS) {
             response.status(http_status.BAD_REQUEST);
             response.send('File no longer exists');
+        } else if (status === file_service.Status.FILE_ALREADY_EXISTS) {
+            response.status(http_status.BAD_REQUEST);
+            response.send('File already exists');
         } else if (status === file_service.Status.INVALID_PATH) {
             response.status(http_status.BAD_REQUEST);
             response.send('Invalid path');

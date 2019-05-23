@@ -60,6 +60,7 @@ exports.createLink = (username, path, username2, path2, callback) => {
                 dbo.collection(filesCollection).findOne({
                     _id: fileId
                 }, (err, res) => {
+                    db.close();
                     if (err || !res) {
                         callback(false);
                         return;
@@ -75,15 +76,21 @@ exports.createLink = (username, path, username2, path2, callback) => {
                                 callback(false);
                                 return;
                             }
-                            dbo.collection(storagesCollection).updateOne({
-                                _id: storageId
-                            }, {
-                                $inc: {
-                                    refcount: 1
-                                }
-                            }, (err, res) => {
-                                db.close();
-                                callback(err ? false : true);
+                            db_access.connect((db) => {
+                                dbo = db.db(dbName);
+                                dbo.collection(storagesCollection).updateOne({
+                                    _id: storageId
+                                }, {
+                                    $inc: {
+                                        refcount: 1
+                                    }
+                                }, (err, res) => {
+                                    db.close();
+                                    if (err) {
+                                        console.log(err);
+                                    }
+                                    callback(err ? false : true);
+                                });
                             });
                         });
                     });
