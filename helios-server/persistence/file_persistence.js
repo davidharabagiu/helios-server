@@ -5,8 +5,8 @@ var fs = require('fs');
 var openedFiles = {};
 
 exports.open = (username, path, readonly, callback) => {
-    var cont = (id) => {
-        realPath = config.storage.path + '/' + id;
+    var cont = (location) => {
+        realPath = config.storage.path + '/' + location;
         fs.open(realPath, readonly ? 'r' : 'w+', (err, fd) => {
             if (err) {
                 console.log('file_persistence', err);
@@ -14,39 +14,39 @@ exports.open = (username, path, readonly, callback) => {
                 return;
             }
             openedFiles[fd] = {
-                id: id,
+                location: location,
                 readonly: readonly,
                 username: username
             };
             callback(fd);
         });
     };
-    metadata.getStorageId(username, path, (id) => {
-        if (!id) {
+    metadata.getLocation(username, path, (location) => {
+        if (!location) {
             if (readonly) {
                 console.log('file_persistence',
                     `cannot find file ${username}:/${path}`);
                 callback();
                 return;
             }
-            id = createFileId();
-            metadata.createFile(username, id, path, false, (success) => {
+            location = createFileId();
+            metadata.createFile(username, location, path, false, (success) => {
                 if (!success) {
                     console.log('file_persistence',
                         `cannot create file ${username}:/${path}`);
                     callback();
                     return;
                 }
-                cont(id);
+                cont(location);
             });
         } else {
-            cont(id);
+            cont(location);
         }
     });
 };
 
 exports.close = (username, fd, callback) => {
-    file = openedFiles[fd];
+    var file = openedFiles[fd];
     if (!file) {
         console.log('file_persistence', `invalid file descriptor ${fd}`);
         callback(false);
@@ -126,18 +126,18 @@ exports.read = (username, fd, buffer, offset, length, callback) => {
 };
 
 exports.delete = (username, path, callback) => {
-    metadata.deleteFile(username, path, (ids) => {
-        if (!ids) {
+    metadata.deleteFile(username, path, (locations) => {
+        if (!locations) {
             console.log('file_persistence', `cannot delete ${username}:/${path}`);
             callback(false);
             return;
         }
         var it = (i) => {
-            if (i === ids.length) {
+            if (i === locations.length) {
                 callback(true);
                 return;
             }
-            realPath = config.storage.path + '/' + ids[i];
+            realPath = config.storage.path + '/' + locations[i];
             fs.unlink(realPath, (err) => {
                 if (err) {
                     console.log('file_persistence', err);
@@ -210,9 +210,7 @@ exports.createDirectory = (username, path, callback) => {
 };
 
 exports.fileExists = (username, path, callback) => {
-    metadata.getStorageId(username, path, (id) => {
-        callback(id ? true : false);
-    });
+    metadata.fileExists(username, path, callback);
 };
 
 exports.getFileId = (username, path, callback) => {
@@ -222,18 +220,13 @@ exports.getFileId = (username, path, callback) => {
 };
 
 exports.getSize = (username, path, callback) => {
-    metadata.getStorageId(username, path, (id) => {
-        if (!id) {
+    metadata.getLocation(username, path, (location) => {
+        if (!location) {
             console.log('file_persistence', `cannot find file ${username}:/${path}`);
             callback(-2);
             return;
         }
-        if (id === 'dir') {
-            console.log('file_persistence', `${username}:/${path} is a directory`);
-            callback(-2);
-            return;
-        }
-        realPath = config.storage.path + '/' + id;
+        realPath = config.storage.path + '/' + location;
         fs.stat(realPath, {
             bigint: true
         }, (err, stats) => {
@@ -251,6 +244,10 @@ exports.isDirectory = (username, path, callback) => {
     metadata.isDirectory(username, path, (dir) => {
         callback(dir);
     });
+};
+
+exports.createLink = (username, path, username2, path2, callback) => {
+    metadata.createLink(username, path, username2, path2, callback);
 };
 
 function createFileId() {

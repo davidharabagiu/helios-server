@@ -322,17 +322,52 @@ exports.shareKey = (request, response) => {
     }
     var usernameTo = request.body.to;
     var keyName = request.body.name;
+    var keyLength = request.body.length;
     var keyContent = request.body.content;
-    if (!usernameTo || !keyName || !keyContent) {
+    if (!usernameTo || !keyName || !keyLength || !keyContent) {
         response.sendStatus(http_status.BAD_REQUEST);
         return;
     }
-    file_service.shareKey(username, usernameTo, keyName, keyContent, (status) => {
+    file_service.shareKey(username, usernameTo, keyName, keyLength, keyContent, (status) => {
         if (status === file_service.Status.SUCCESS) {
             response.sendStatus(http_status.OK);
         } else if (status === file_service.Status.INVALID_USER) {
             response.status(http_status.BAD_REQUEST);
             response.send('Invalid user');
+        } else {
+            response.sendStatus(http_status.INTERNAL_SERVER_ERROR);
+        }
+    });
+};
+
+exports.acceptFile = (request, response) => {
+    var username = authorize(request, response);
+    if (!username) {
+        return;
+    }
+    var notificationId = request.body.notification;
+    var path = request.body.path;
+    if (!notificationId || !path) {
+        response.sendStatus(http_status.BAD_REQUEST);
+        return;
+    }
+    file_service.acceptSharedFile(username, notificationId, path, (status) => {
+        if (status === file_service.Status.SUCCESS) {
+            response.sendStatus(http_status.OK);
+        } else if (status === file_service.Status.UNAUTHORIZED) {
+            response.sendStatus(http_status.UNAUTHORIZED);
+        } else if (status === file_service.Status.INVALID_NOTIFICATION_TYPE) {
+            response.status(http_status.BAD_REQUEST);
+            response.send('Invalid notification type');
+        } else if (status === file_service.Status.INVALID_USER || status === file_service.Status.FILE_NO_LONGER_EXISTS) {
+            response.status(http_status.BAD_REQUEST);
+            response.send('File no longer exists');
+        } else if (status === file_service.Status.FILE_ALREADY_EXISTS) {
+            response.status(http_status.BAD_REQUEST);
+            response.send('File already exists');
+        } else if (status === file_service.Status.INVALID_PATH) {
+            response.status(http_status.BAD_REQUEST);
+            response.send('Invalid path');
         } else {
             response.sendStatus(http_status.INTERNAL_SERVER_ERROR);
         }
