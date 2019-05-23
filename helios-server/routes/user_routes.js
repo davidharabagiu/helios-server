@@ -82,3 +82,57 @@ exports.checkToken = function(request, response) {
         }
     }
 }
+
+exports.setUserKey = (request, response) => {
+    var username = authorize(request, response);
+    if (!username) {
+        return;
+    }
+    user_service.setUserKey(username, request.file.buffer, (status) => {
+        if (status === user_service.Status.SUCCESS) {
+            response.sendStatus(http_status.OK);
+        } else {
+            response.sendStatus(http_status.INTERNAL_SERVER_ERROR);
+        }
+    });
+};
+
+exports.getUserKey = (request, response) => {
+    var username = authorize(request, response);
+    if (!username) {
+        return;
+    }
+    var targetUsername = request.query.user;
+    if (!targetUsername) {
+        response.sendStatus(http_status.BAD_REQUEST);
+        return;
+    }
+    user_service.getUserKey(targetUsername, (status, data) => {
+        if (status === user_service.Status.SUCCESS) {
+            response.status(http_status.OK);
+            response.send(data);
+        } else if (status === user_service.Status.INVALID_USER) {
+            response.status(http_status.BAD_REQUEST);
+            response.send('Invalid user');
+        } else if (status === user_service.Status.USER_DID_NOT_SPECIFY_PUBLIC_KEY) {
+            response.status(http_status.BAD_REQUEST);
+            response.send('User did not specify public key');
+        } else {
+            response.sendStatus(http_status.INTERNAL_SERVER_ERROR);
+        }
+    });
+};
+
+function authorize(request, response) {
+    token = request.get('token');
+    if (!token) {
+        response.sendStatus(http_status.UNAUTHORIZED);
+        return null;
+    }
+    username = user_service.usernameFromToken(token);
+    if (!username) {
+        response.sendStatus(http_status.UNAUTHORIZED);
+        return null;
+    }
+    return username;
+}

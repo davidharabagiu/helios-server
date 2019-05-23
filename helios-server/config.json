@@ -34,5 +34,6 @@
     "storage": {
         "fileIdLength": 32,
         "path": "../storage"
-    }
+    },
+    "userKeyStorage": "../userkeys"
 }

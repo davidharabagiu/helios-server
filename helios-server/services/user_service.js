@@ -1,6 +1,7 @@
 var persistence = require('../persistence/user_persistence');
 var auth_utils = require('../utils/auth_utils');
 var config = require('../utils/config').config;
+var fs = require('fs');
 
 const Status = {
     SUCCESS: 0,
@@ -10,7 +11,10 @@ const Status = {
     LOGIN_INVALID_PASSWORD: 4,
     INVALID_TOKEN: 5,
     REGISTER_INVALID_USERNAME: 6,
-    REGISTER_INVALID_PASSWORD: 7
+    REGISTER_INVALID_PASSWORD: 7,
+    IO_ERROR: 8,
+    INVALID_USER: 9,
+    USER_DID_NOT_SPECIFY_PUBLIC_KEY: 10
 };
 Object.freeze(Status);
 exports.Status = Status;
@@ -85,3 +89,58 @@ exports.checkToken = function(username, token) {
         return Status.SUCCESS;
     }
 }
+
+exports.setUserKey = (username, buffer, callback) => {
+    fs.open(config.userKeyStorage + '/' + username + '.pubk', 'w+', (err, fd) => {
+        if (err) {
+            console.log('user_service', err);
+            callback(Status.IO_ERROR);
+            return;
+        }
+        fs.write(fd, buffer, (err, bytesWritten) => {
+            if (err) {
+                console.log('user_service', err);
+                fs.close(fd, () => {
+                    callback(Status.IO_ERROR);
+                });
+                return;
+            }
+            if (bytesWritten !== buffer.length) {
+                fs.close(fd, () => {
+                    callback(Status.IO_ERROR);
+                });
+                return;
+            }
+            fs.close(fd, () => {
+                callback(Status.SUCCESS);
+            });
+        });
+    });
+};
+
+exports.getUserKey = (username, callback) => {
+    persistence.findUser(username, (user) => {
+        if (!user) {
+            callback(Status.INVALID_USER);
+            return;
+        }
+        fs.open(config.userKeyStorage + '/' + username + '.pubk', 'r', (err, fd) => {
+            if (err) {
+                callback(Status.USER_DID_NOT_SPECIFY_PUBLIC_KEY);
+                return;
+            }
+            fs.readFile(fd, 'utf8', (err, data) => {
+                if (err) {
+                    console.log('user_service', err);
+                    fs.close(fd, () => {
+                        callback(Status.IO_ERROR);
+                    });
+                    return;
+                }
+                fs.close(fd, () => {
+                    callback(Status.SUCCESS, data);
+                });
+            });
+        });
+    });
+};
