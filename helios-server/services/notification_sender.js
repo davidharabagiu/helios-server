@@ -7,10 +7,11 @@ exports.sendFileShareNotification = (usernameFrom, usernameTo, fileName, path, c
     }, callback);
 };
 
-exports.sendKeyShareNotification = (usernameFrom, usernameTo, keyName, keyContent, callback) => {
+exports.sendKeyShareNotification = (usernameFrom, usernameTo, keyName, keyLength, keyContent, callback) => {
     np.createNotification(usernameTo, `${usernameFrom} sent you a key`, {
         'from': usernameFrom,
         'keyName': keyName,
+        'keyLength': keyLength,
         'keyContent': keyContent
     }, callback);
 };

@@ -322,12 +322,13 @@ exports.shareKey = (request, response) => {
     }
     var usernameTo = request.body.to;
     var keyName = request.body.name;
+    var keyLength = request.body.length;
     var keyContent = request.body.content;
-    if (!usernameTo || !keyName || !keyContent) {
+    if (!usernameTo || !keyName || !keyLength || !keyContent) {
         response.sendStatus(http_status.BAD_REQUEST);
         return;
     }
-    file_service.shareKey(username, usernameTo, keyName, keyContent, (status) => {
+    file_service.shareKey(username, usernameTo, keyName, keyLength, keyContent, (status) => {
         if (status === file_service.Status.SUCCESS) {
             response.sendStatus(http_status.OK);
         } else if (status === file_service.Status.INVALID_USER) {

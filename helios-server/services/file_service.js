@@ -292,14 +292,14 @@ exports.shareFile = (username, usernameTo, path, callback) => {
     });
 };
 
-exports.shareKey = (username, usernameTo, keyName, keyContent, callback) => {
+exports.shareKey = (username, usernameTo, keyName, keyLength, keyContent, callback) => {
     users.findUser(usernameTo, (userTo) => {
         if (!userTo) {
             callback(Status.INVALID_USER);
             return;
         }
         notification_sender.sendKeyShareNotification(username, usernameTo,
-            keyName, keyContent, (success) => {
+            keyName, keyLength, keyContent, (success) => {
                 callback(success ? Status.SUCCESS : Status
                     .UNKNOWN_ERROR);
             });
@@ -320,6 +320,7 @@ exports.getSharedKey = (username, notificationId, callback) => {
             } else {
                 callback(Status.SUCCESS, {
                     name: notification.data.keyName,
+                    length: notification.data.keyLength,
                     content: notification.data.keyContent
                 });
             }
