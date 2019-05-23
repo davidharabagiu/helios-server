@@ -32,6 +32,7 @@ exports.register = (app) => {
     app.post('/share', urlEncodedParser, file_routes.share);
     app.post('/sharekey', urlEncodedParser, file_routes.shareKey);
     app.get('/getsharedkey', urlEncodedParser, file_routes.getSharedKey);
+    app.post('/acceptfile', urlEncodedParser, file_routes.acceptFile);
 
     // Notification routes
     app.get('/notifications', urlEncodedParser, notification_routes.notifications);

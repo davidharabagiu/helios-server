@@ -246,6 +246,10 @@ exports.isDirectory = (username, path, callback) => {
     });
 };
 
+exports.createLink = (username, path, username2, path2, callback) => {
+    metadata.createLink(username, path, username2, path2, callback);
+};
+
 function createFileId() {
     const fileIdLength = config.storage.fileIdLength;
     abc = 'abcdefghijklmnopqrstuvwxyz1234567890'.split('');

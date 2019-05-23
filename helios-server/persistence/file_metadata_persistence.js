@@ -44,6 +44,55 @@ exports.createFile = (username, location, path, isDir, callback) => {
     });
 };
 
+exports.createLink = (username, path, username2, path2, callback) => {
+    findRoot(username, (rootId) => {
+        if (!rootId) {
+            callback(false);
+            return;
+        }
+        findFile(rootId, path, (parentId, fileId) => {
+            if (!fileId) {
+                callback(false);
+                return;
+            }
+            db_access.connect((db) => {
+                dbo = db.db(dbName);
+                dbo.collection(filesCollection).findOne({
+                    _id: fileId
+                }, (err, res) => {
+                    if (err || !res) {
+                        callback(false);
+                        return;
+                    }
+                    var storageId = res.storageId;
+                    findRoot(username2, (rootId2) => {
+                        if (!rootId2) {
+                            callback(false);
+                            return;
+                        }
+                        createFileFromPath(rootId2, undefined, path2, false, [], storageId, (success) => {
+                            if (!success) {
+                                callback(false);
+                                return;
+                            }
+                            dbo.collection(storagesCollection).updateOne({
+                                _id: storageId
+                            }, {
+                                $inc: {
+                                    refcount: 1
+                                }
+                            }, (err, res) => {
+                                db.close();
+                                callback(err ? false : true);
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    });
+};
+
 exports.deleteFile = (username, path, callback) => {
     findRoot(username, (rootId) => {
         if (!rootId) {
