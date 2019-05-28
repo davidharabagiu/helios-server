@@ -5,7 +5,6 @@ var http_status = require('../utils/http_status');
 exports.mkdir = (request, response) => {
     var username = authorize(request, response);
     if (!username) {
-        response.sendStatus(http_status.UNAUTHORIZED);
         return;
     }
     var path = request.body.path;
@@ -31,7 +30,6 @@ exports.mkdir = (request, response) => {
 exports.beginUpload = (request, response) => {
     var username = authorize(request, response);
     if (!username) {
-        response.sendStatus(http_status.UNAUTHORIZED);
         return;
     }
     var path = request.body.path;
@@ -55,7 +53,6 @@ exports.beginUpload = (request, response) => {
 exports.beginDownload = (request, response) => {
     var username = authorize(request, response);
     if (!username) {
-        response.sendStatus(http_status.UNAUTHORIZED);
         return;
     }
     var path = request.body.path;
@@ -88,7 +85,6 @@ exports.beginDownload = (request, response) => {
 exports.endTransfer = (request, response) => {
     var username = authorize(request, response);
     if (!username) {
-        response.sendStatus(http_status.UNAUTHORIZED);
         return;
     }
     var transferId = request.body.transferId;
@@ -113,7 +109,6 @@ exports.endTransfer = (request, response) => {
 exports.size = (request, response) => {
     var username = authorize(request, response);
     if (!username) {
-        response.sendStatus(http_status.UNAUTHORIZED);
         return;
     }
     var path = request.query.path;
@@ -137,7 +132,6 @@ exports.size = (request, response) => {
 exports.list = (request, response) => {
     var username = authorize(request, response);
     if (!username) {
-        response.sendStatus(http_status.UNAUTHORIZED);
         return;
     }
     var path = request.query.path;
@@ -161,7 +155,6 @@ exports.list = (request, response) => {
 exports.delete = (request, response) => {
     var username = authorize(request, response);
     if (!username) {
-        response.sendStatus(http_status.UNAUTHORIZED);
         return;
     }
     var path = request.body.path;
@@ -184,7 +177,6 @@ exports.delete = (request, response) => {
 exports.move = (request, response) => {
     var username = authorize(request, response);
     if (!username) {
-        response.sendStatus(http_status.UNAUTHORIZED);
         return;
     }
     var src = request.body.src;
@@ -211,7 +203,6 @@ exports.move = (request, response) => {
 exports.download = (request, response) => {
     var username = authorize(request, response);
     if (!username) {
-        response.sendStatus(http_status.UNAUTHORIZED);
         return;
     }
     var transferId = request.query.transferId;
@@ -241,7 +232,6 @@ exports.download = (request, response) => {
 exports.upload = (request, response) => {
     var username = authorize(request, response);
     if (!username) {
-        response.sendStatus(http_status.UNAUTHORIZED);
         return;
     }
     var transferId = request.body.transferId;
@@ -269,7 +259,6 @@ exports.upload = (request, response) => {
 exports.isDir = (request, response) => {
     var username = authorize(request, response);
     if (!username) {
-        response.sendStatus(http_status.UNAUTHORIZED);
         return;
     }
     var path = request.query.path;
@@ -290,7 +279,6 @@ exports.isDir = (request, response) => {
 exports.share = (request, response) => {
     var username = authorize(request, response);
     if (!username) {
-        response.sendStatus(http_status.UNAUTHORIZED);
         return;
     }
     var usernameTo = request.body.to;
@@ -317,13 +305,13 @@ exports.share = (request, response) => {
 exports.shareKey = (request, response) => {
     var username = authorize(request, response);
     if (!username) {
-        response.sendStatus(http_status.UNAUTHORIZED);
         return;
     }
     var usernameTo = request.body.to;
     var keyName = request.body.name;
     var keyLength = request.body.length;
-    var keyContent = request.body.content;
+    var keyContent = request.file.buffer.toString('utf8');
+
     if (!usernameTo || !keyName || !keyLength || !keyContent) {
         response.sendStatus(http_status.BAD_REQUEST);
         return;

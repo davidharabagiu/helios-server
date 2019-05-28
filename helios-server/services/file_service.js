@@ -320,7 +320,7 @@ exports.getSharedKey = (username, notificationId, callback) => {
             } else {
                 callback(Status.SUCCESS, {
                     name: notification.data.keyName,
-                    length: notification.data.keyLength,
+                    length: Number(notification.data.keyLength),
                     content: notification.data.keyContent
                 });
             }
