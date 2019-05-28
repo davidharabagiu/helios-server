@@ -32,8 +32,8 @@ exports.register = (app) => {
     app.post('/upload', formData.single('data'), file_routes.upload);
     app.get('/isdir', urlEncodedParser, file_routes.isDir);
     app.post('/share', urlEncodedParser, file_routes.share);
-    app.post('/sharekey', urlEncodedParser, file_routes.shareKey);
-    app.get('/getsharedkey', urlEncodedParser, file_routes.getSharedKey);
+    app.post('/sharekey', formData.single('data'), file_routes.shareKey);
+    app.get('/acceptkey', urlEncodedParser, file_routes.getSharedKey);
     app.post('/acceptfile', urlEncodedParser, file_routes.acceptFile);
 
     // Notification routes
